@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<style data-omelette-print-defaults>
+@media print {
+  h1, h2, h3, h4, h5, h6 { break-after: avoid; }
+  figure, table, pre, blockquote, img, svg, tr, [class~="card" i] { break-inside: avoid; }
+  img, svg { max-width: 100%; }
+  p { orphans: 3; widows: 3; }
+}
+</style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Nerion — Функциональные требования к бекенду</title>
+<style>
+/* ── Fonts ─────────────────────────────────────────────────── */
+@font-face { font-family:"Manrope"; font-style:normal; font-weight:400 700; font-display:swap; src:url("https://fonts.gstatic.com/s/manrope/v15/xn7gYHE41ni1AdIRggexSg.woff2") format("woff2"); unicode-range:U+0000-024F,U+0259,U+1E00-1EFF,U+2000-206F,U+2100-218F,U+2C60-2C7F,U+0301,U+A720-A7FF; }
+@font-face { font-family:"Manrope"; font-style:normal; font-weight:400 700; font-display:swap; src:url("https://fonts.gstatic.com/s/manrope/v15/xn7gYHE41ni1AdIRggOxSg.woff2") format("woff2"); unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family:"JetBrains Mono"; font-style:normal; font-weight:400 600; font-display:swap; src:url("https://fonts.gstatic.com/s/jetbrainsmono/v20/tDbX2o-flEEny0FZhsfKu5WU4xD-IQ-PuZJJXxfpAO-Lf1OQk6OThxPA.woff2") format("woff2"); unicode-range:U+0000-024F,U+1E00-1EFF,U+2000-206F; }
+@font-face { font-family:"JetBrains Mono"; font-style:normal; font-weight:400 600; font-display:swap; src:url("https://fonts.gstatic.com/s/jetbrainsmono/v20/tDbX2o-flEEny0FZhsfKu5WU4xD-IQ-PuZJJXxfpAO6Lf1OQk6OThxPA.woff2") format("woff2"); unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+
+:root {
+  --purple-50:#F4F3FB; --purple-100:#E6E4F6; --purple-200:#C8C4ED; --purple-300:#A39DDF;
+  --purple-400:#7F77DD; --purple-500:#6960CC; --purple-600:#534AB7; --purple-700:#3F389A;
+  --purple-900:#1B1850;
+  --neutral-0:#FFFFFF; --neutral-50:#FAFAF9; --neutral-100:#F4F3F4; --neutral-150:#ECEBED;
+  --neutral-200:#E2E0E5; --neutral-300:#CECCD3; --neutral-400:#A8A5B0; --neutral-500:#7C7A85;
+  --neutral-600:#57555E; --neutral-700:#3D3B44; --neutral-800:#26242B; --neutral-900:#161519;
+  --green-50:#ECFDF5; --green-500:#10A37F; --green-700:#035E45;
+  --amber-50:#FFFBEB; --amber-500:#D97706; --amber-700:#92400E;
+  --red-50:#FEF2F2; --red-500:#DC2626; --red-700:#991B1B;
+  --blue-50:#EFF6FF; --blue-500:#2563EB; --blue-600:#1D4ED8;
+  --bg-0:var(--neutral-0); --bg-1:var(--neutral-50); --bg-2:var(--neutral-100);
+  --fg-1:var(--neutral-900); --fg-2:var(--neutral-600); --fg-3:var(--neutral-500);
+  --border-default:var(--neutral-200); --border-strong:var(--neutral-300);
+  --brand:var(--purple-400);
+  --font-sans:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --font-mono:"JetBrains Mono","SF Mono",Menlo,Monaco,monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { color-scheme: light; }
+body {
+  margin: 0; font-family: var(--font-sans); font-size: 10.5pt; line-height: 1.55;
+  color: var(--fg-1); background: var(--neutral-300);
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Page model ────────────────────────────────────────────── */
+.page {
+  background: var(--bg-0);
+  width: 210mm; min-height: 297mm;
+  margin: 16px auto; padding: 22mm 20mm 20mm;
+  box-shadow: 0 4px 24px rgba(20,14,58,.14);
+}
+
+h1,h2,h3,h4 { font-weight: 700; line-height: 1.2; color: var(--fg-1); margin: 0; text-wrap: balance; }
+p { margin: 0 0 8px; text-wrap: pretty; }
+strong { font-weight: 600; }
+a { color: var(--purple-600); }
+
+/* ── Cover ─────────────────────────────────────────────────── */
+.cover { display: flex; flex-direction: column; min-height: 257mm; }
+.brandbar { display: flex; align-items: center; gap: 10px; }
+.logo-mark { width: 26px; height: 26px; }
+.brandbar .wm { font-weight: 700; font-size: 17px; letter-spacing: -0.02em; }
+.cover-spacer { flex: 1; }
+.cover .doctype { font-family: var(--font-mono); font-size: 9.5pt; letter-spacing: 0.14em; text-transform: uppercase; color: var(--brand); font-weight: 600; }
+.cover h1 { font-size: 33pt; letter-spacing: -0.02em; line-height: 1.08; margin: 14px 0 0; }
+.cover .sub { font-size: 13pt; color: var(--fg-2); margin-top: 16px; max-width: 70%; }
+.cover-meta { margin-top: 40px; display: grid; grid-template-columns: auto 1fr; gap: 5px 28px; font-size: 10pt; }
+.cover-meta dt { color: var(--fg-3); }
+.cover-meta dd { margin: 0; font-weight: 500; }
+.cover-foot { font-size: 9pt; color: var(--fg-3); border-top: 0.5px solid var(--border-default); padding-top: 12px; margin-top: 36px; }
+
+/* ── Typography rhythm ─────────────────────────────────────── */
+.sectionhead { margin-top: 30px; padding-bottom: 8px; border-bottom: 2px solid var(--fg-1); display: flex; align-items: baseline; gap: 12px; }
+.sectionhead .num { font-family: var(--font-mono); font-size: 12pt; color: var(--brand); font-weight: 600; }
+.sectionhead h2 { font-size: 16pt; letter-spacing: -0.01em; }
+h3 { font-size: 11.5pt; margin: 22px 0 6px; }
+.lede { color: var(--fg-2); font-size: 10.5pt; margin: 10px 0 4px; }
+
+/* ── Requirement rows ──────────────────────────────────────── */
+.req { display: grid; grid-template-columns: 64px 1fr; gap: 14px; padding: 9px 0; border-bottom: 0.5px solid var(--border-default); break-inside: avoid; }
+.req:last-child { border-bottom: 0; }
+.req .id { font-family: var(--font-mono); font-size: 8.5pt; font-weight: 600; color: var(--brand); padding-top: 2px; }
+.req .body { font-size: 10pt; }
+.req .body p { margin: 0; }
+.req .body .note { color: var(--fg-3); font-size: 9pt; margin-top: 3px; }
+
+/* ── Pills & badges ────────────────────────────────────────── */
+.slug { font-family: var(--font-mono); font-size: 0.86em; background: var(--bg-2); border: 0.5px solid var(--border-default); padding: 1px 6px; border-radius: 4px; white-space: nowrap; color: var(--fg-1); }
+.m { display: inline-block; font-family: var(--font-mono); font-size: 7.5pt; font-weight: 600; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.04em; vertical-align: middle; }
+.m.get { background: var(--blue-50); color: var(--blue-600); }
+.m.post { background: var(--green-50); color: var(--green-700); }
+.m.put { background: var(--amber-50); color: var(--amber-700); }
+.m.del { background: var(--red-50); color: var(--red-700); }
+.prio { display:inline-block; font-size: 7.5pt; font-weight: 600; padding: 1px 7px; border-radius: 999px; letter-spacing: 0.02em; vertical-align: middle; }
+.prio.must { background: var(--purple-100); color: var(--purple-700); }
+.prio.should { background: var(--bg-2); color: var(--fg-2); }
+
+/* ── Endpoint table ────────────────────────────────────────── */
+table { width: 100%; border-collapse: collapse; margin: 10px 0 4px; font-size: 9.2pt; }
+thead th { text-align: left; font-size: 8pt; text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-3); font-weight: 600; padding: 6px 8px; border-bottom: 1px solid var(--border-strong); }
+tbody td { padding: 6px 8px; border-bottom: 0.5px solid var(--border-default); vertical-align: top; }
+tbody tr:last-child td { border-bottom: 0; }
+td .ep { font-family: var(--font-mono); font-size: 8.6pt; }
+.endpoint-table td:first-child { white-space: nowrap; width: 1%; }
+
+/* ── Callout ───────────────────────────────────────────────── */
+.callout { border: 0.5px solid var(--border-default); border-left: 3px solid var(--brand); background: var(--purple-50); padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 14px 0; font-size: 9.6pt; break-inside: avoid; }
+.callout.warn { border-left-color: var(--amber-500); background: var(--amber-50); }
+.callout .ct { font-weight: 700; font-size: 9pt; text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-2); display:block; margin-bottom: 4px; }
+
+/* ── JSON code block ───────────────────────────────────────── */
+pre { font-family: var(--font-mono); font-size: 8.6pt; line-height: 1.5; background: var(--neutral-900); color: #E8E6F0; padding: 14px 16px; border-radius: 8px; overflow-x: auto; margin: 10px 0; }
+pre .k { color: var(--purple-300); }
+pre .s { color: #93D6B8; }
+pre .n { color: #E0B872; }
+pre .c { color: var(--neutral-500); }
+
+/* ── Two-col cards ─────────────────────────────────────────── */
+.cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+.card { border: 0.5px solid var(--border-default); border-radius: 8px; padding: 14px 16px; break-inside: avoid; }
+.card h4 { font-size: 10pt; margin-bottom: 5px; display:flex; align-items:center; gap:7px; }
+.card p { font-size: 9.2pt; color: var(--fg-2); margin: 0; }
+.dot { width: 7px; height: 7px; border-radius: 999px; flex: none; }
+
+/* ── TOC ───────────────────────────────────────────────────── */
+.toc { margin-top: 4px; }
+.toc-row { display: grid; grid-template-columns: 30px 1fr auto; align-items: baseline; padding: 6px 0; border-bottom: 0.5px solid var(--border-default); font-size: 10.5pt; }
+.toc-row .tn { font-family: var(--font-mono); color: var(--brand); font-weight: 600; font-size: 9.5pt; }
+.toc-row .tt { font-weight: 500; }
+.toc-row .tp { color: var(--fg-3); font-size: 9pt; }
+
+ul.tight { margin: 6px 0 10px; padding-left: 18px; }
+ul.tight li { margin-bottom: 4px; font-size: 10pt; }
+.muted { color: var(--fg-3); }
+
+/* ── Print ─────────────────────────────────────────────────── */
+@media print {
+  body { background: white; }
+  .page { width: auto; min-height: 0; margin: 0; padding: 0; box-shadow: none; }
+  .page + .page { page-break-before: always; }
+  @page { size: A4; margin: 18mm 16mm; }
+  pre { background: var(--neutral-900) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .m, .prio, .slug, .callout, .card, .dot, thead th, .sectionhead { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════ COVER ════════════════════ -->
+<section class="page cover" data-screen-label="Обложка">
+  <div class="brandbar">
+    <svg class="logo-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="32" height="32" rx="7" fill="#7F77DD"/>
+      <path d="M9 23V9h2.6l9.8 11.2V9H24v14h-2.6L11.6 11.8V23H9Z" fill="white"/>
+    </svg>
+    <span class="wm">Nerion</span>
+  </div>
+
+  <div class="cover-spacer"></div>
+
+  <div class="doctype">Спецификация · Backend</div>
+  <h1>Функциональные требования к бекенду</h1>
+  <p class="sub">Серверная платформа, превращающая описанные пользователем данные в REST API, публичные списки и документы по ГОСТ.</p>
+
+  <dl class="cover-meta">
+    <dt>Продукт</dt><dd>Nerion · app.nerion.ru</dd>
+    <dt>Версия документа</dt><dd>0.4 — MVP scope</dd>
+    <dt>Основание</dt><dd>Прототип (23 экрана) + дизайн-документ §8</dd>
+    <dt>Стек</dt><dd>Go · PostgreSQL (schema-per-tenant) · Python + WeasyPrint · Yandex Object Storage</dd>
+    <dt>Статус</dt><dd>Черновик к ревью</dd>
+  </dl>
+
+  <div class="cover-spacer"></div>
+
+  <p class="cover-foot">Документ описывает требования к серверной части. Требования к клиенту, маркетинговому сайту и биллингу — вне области. Уровни приоритета: <span class="prio must">Must</span> — обязательно для MVP, <span class="prio should">Should</span> — желательно, допускается перенос.</p>
+</section>
+
+<!-- ════════════════════ TOC + ARCHITECTURE ════════════════════ -->
+<section class="page" data-screen-label="Содержание и архитектура">
+  <div class="sectionhead"><span class="num">00</span><h2>Содержание</h2></div>
+  <div class="toc">
+    <div class="toc-row"><span class="tn">1</span><span class="tt">Архитектура и многоарендность</span><span class="tp">схема-на-арендатора</span></div>
+    <div class="toc-row"><span class="tn">2</span><span class="tt">Аутентификация и сессии</span><span class="tp">A01–A04</span></div>
+    <div class="toc-row"><span class="tn">3</span><span class="tt">Пространства</span><span class="tp">SP01–SP02</span></div>
+    <div class="toc-row"><span class="tn">4</span><span class="tt">Команда и роли</span><span class="tp">SET02</span></div>
+    <div class="toc-row"><span class="tn">5</span><span class="tt">Схема: таблицы и поля</span><span class="tp">SCH01–SCH04</span></div>
+    <div class="toc-row"><span class="tn">6</span><span class="tt">Записи и данные</span><span class="tp">D01–D04</span></div>
+    <div class="toc-row"><span class="tn">7</span><span class="tt">Авто-REST API и Swagger</span><span class="tp">API01, API03</span></div>
+    <div class="toc-row"><span class="tn">8</span><span class="tt">API-ключи</span><span class="tp">API02</span></div>
+    <div class="toc-row"><span class="tn">9</span><span class="tt">Публичные списки (выходы)</span><span class="tp">FILES</span></div>
+    <div class="toc-row"><span class="tn">10</span><span class="tt">Генерация PDF по ГОСТ</span><span class="tp">PDF01–PDF03</span></div>
+    <div class="toc-row"><span class="tn">11</span><span class="tt">Файлы и хранилище</span><span class="tp">Object Storage</span></div>
+    <div class="toc-row"><span class="tn">12</span><span class="tt">Настройки и аккаунт</span><span class="tp">SET01, SET03</span></div>
+    <div class="toc-row"><span class="tn">13</span><span class="tt">Нефункциональные требования</span><span class="tp">NFR</span></div>
+  </div>
+
+  <div class="sectionhead"><span class="num">01</span><h2>Архитектура и многоарендность</h2></div>
+  <p class="lede">Ядро Nerion — генератор выходов. Пользователь один раз описывает данные внутри «пространства»; платформа автоматически отдаёт их в виде REST API, публичных списков и PDF. Серверная часть обязана поддерживать произвольные пользовательские схемы данных без выкатки кода.</p>
+
+  <div class="cards">
+    <div class="card"><h4><span class="dot" style="background:var(--purple-400)"></span>Изоляция арендатора</h4><p>Каждое пространство — отдельная схема PostgreSQL. Таблицы пользователя создаются как реальные таблицы внутри схемы пространства. Кросс-схемные запросы запрещены.</p></div>
+    <div class="card"><h4><span class="dot" style="background:var(--green-500)"></span>Динамический DDL</h4><p>Создание/изменение «таблицы» пользователя транслируется в <span class="slug">CREATE / ALTER TABLE</span> внутри схемы. Системный реестр хранит метаописание полей.</p></div>
+    <div class="card"><h4><span class="dot" style="background:var(--blue-500)"></span>Бизнес-язык</h4><p>API и UI оперируют доменными словами (Курс, Клиент), не SQL. Сервер хранит соответствие «человеческое имя ↔ slug ↔ физическая колонка».</p></div>
+    <div class="card"><h4><span class="dot" style="background:var(--amber-500)"></span>Выходы из одной модели</h4><p>REST, списки и PDF читают одну и ту же модель данных. Изменение схемы немедленно отражается во всех выходах.</p></div>
+  </div>
+
+  <div class="req"><span class="id">FR‑1.1</span><div class="body"><p><span class="prio must">Must</span> Системная БД хранит реестр: пользователи, пространства, участники, метаописание таблиц и полей, API-ключи, PDF-шаблоны, маппинги, задачи генерации, журнал.</p></div></div>
+  <div class="req"><span class="id">FR‑1.2</span><div class="body"><p><span class="prio must">Must</span> При создании пространства сервер создаёт изолированную схему PostgreSQL и фиксирует её slug. Slug уникален в пределах инсталляции, неизменяем после создания.</p><p class="note">Slug — латиница, цифры, дефис; используется в URL API и публичных списков.</p></div></div>
+  <div class="req"><span class="id">FR‑1.3</span><div class="body"><p><span class="prio must">Must</span> Данные одного пространства недоступны из контекста другого. Авторизация проверяется на уровне пространства до любого обращения к его схеме.</p></div></div>
+  <div class="req"><span class="id">FR‑1.4</span><div class="body"><p><span class="prio should">Should</span> Каждое изменение схемы версионируется (миграция с меткой времени и автором) для отката и аудита.</p></div></div>
+</section>
+
+<!-- ════════════════════ AUTH ════════════════════ -->
+<section class="page" data-screen-label="Аутентификация">
+  <div class="sectionhead"><span class="num">02</span><h2>Аутентификация и сессии</h2></div>
+  <p class="lede">Экраны A01 Вход · A02 Регистрация · A03 Сброс пароля · A04 Новый пароль. Сессии на JWT.</p>
+
+  <div class="req"><span class="id">FR‑2.1</span><div class="body"><p><span class="prio must">Must</span> Регистрация по email + пароль. Email уникален, проверяется подтверждающим письмом со ссылкой ограниченного срока действия.</p></div></div>
+  <div class="req"><span class="id">FR‑2.2</span><div class="body"><p><span class="prio must">Must</span> Пароли хранятся только в виде хэша (bcrypt/argon2). Минимальная длина и базовая проверка стойкости — на сервере, не только на клиенте.</p></div></div>
+  <div class="req"><span class="id">FR‑2.3</span><div class="body"><p><span class="prio must">Must</span> Вход выдаёт пару токенов: короткоживущий access (JWT) и долгоживущий refresh. Refresh отзывается при выходе и смене пароля.</p></div></div>
+  <div class="req"><span class="id">FR‑2.4</span><div class="body"><p><span class="prio must">Must</span> Сброс пароля: запрос по email → одноразовая ссылка с токеном (срок ≤ 60 мин) → установка нового пароля. После использования токен инвалидируется, все активные сессии завершаются.</p></div></div>
+  <div class="req"><span class="id">FR‑2.5</span><div class="body"><p><span class="prio should">Should</span> Ограничение частоты попыток входа и запросов сброса по IP и по аккаунту (защита от перебора).</p></div></div>
+
+  <h3>Эндпоинты</h3>
+  <table class="endpoint-table">
+    <thead><tr><th>Метод</th><th>Путь</th><th>Назначение</th></tr></thead>
+    <tbody>
+      <tr><td><span class="m post">POST</span></td><td><span class="ep">/auth/register</span></td><td>Создать аккаунт, отправить письмо подтверждения</td></tr>
+      <tr><td><span class="m post">POST</span></td><td><span class="ep">/auth/login</span></td><td>Выдать access + refresh</td></tr>
+      <tr><td><span class="m post">POST</span></td><td><span class="ep">/auth/refresh</span></td><td>Обновить access по refresh</td></tr>
+      <tr><td><span class="m post">POST</span></td><td><span class="ep">/auth/logout</span></td><td>Отозвать refresh</td></tr>
+      <tr><td><span class="m post">POST</span></td><td><span class="ep">/auth/password/reset-request</span></td><td>Отправить ссылку сброса</td></tr>
+      <tr><td><span class="m post">POST</span></td><td><span class="ep">/auth/password/reset</span></td><td>Установить новый пароль по токену</td></tr>
+      <tr><td><span class="m get">GET</span></td><td><span class="ep">/me</span></td><td>Текущий пользователь и его пространства</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ════════════════════ SPACES + TEAM ════════════════════ -->
+<section class="page" data-screen-label="Пространства и команда">
+  <div class="sectionhead"><span class="num">03</span><h2>Пространства</h2></div>
+  <p class="lede">Экраны SP01 Список · SP02 Создание. Пространство — единица аренды, изолированная схема данных.</p>
+
+  <div class="req"><span class="id">FR‑3.1</span><div class="body"><p><span class="prio must">Must</span> Пользователь видит список только тех пространств, где он участник. Для каждого — имя, slug, роль пользователя, статус API, число таблиц.</p></div></div>
+  <div class="req"><span class="id">FR‑3.2</span><div class="body"><p><span class="prio must">Must</span> Создание пространства: имя + slug. Создатель становится Admin. Сервер инициализирует схему БД (FR‑1.2) и базовый API-ключ.</p></div></div>
+  <div class="req"><span class="id">FR‑3.3</span><div class="body"><p><span class="prio must">Must</span> Удаление пространства необратимо: удаляются схема, данные, ключи, шаблоны, файлы. Требуется подтверждение вводом имени пространства.</p></div></div>
+  <div class="req"><span class="id">FR‑3.4</span><div class="body"><p><span class="prio should">Should</span> Лимит числа пространств и таблиц на аккаунт согласно тарифу (проверяется на сервере при создании).</p></div></div>
+
+  <h3>Эндпоинты</h3>
+  <table class="endpoint-table">
+    <thead><tr><th>Метод</th><th>Путь</th><th>Назначение</th></tr></thead>
+    <tbody>
+      <tr><td><span class="m get">GET</span></td><td><span class="ep">/spaces</span></td><td>Список пространств пользователя</td></tr>
+      <tr><td><span class="m post">POST</span></td><td><span class="ep">/spaces</span></td><td>Создать пространство (+ схема, + ключ)</td></tr>
+      <tr><td><span class="m get">GET</span></td><td><span class="ep">/spaces/{slug}</span></td><td>Карточка пространства</td></tr>
+      <tr><td><span class="m del">DELETE</span></td><td><span class="ep">/spaces/{slug}</span></td><td>Необратимое удаление</td></tr>
+    </tbody>
+  </table>
+
+  <div class="sectionhead"><span class="num">04</span><h2>Команда и роли</h2></div>
+  <p class="lede">Экран SET02. Две роли внутри пространства.</p>
+
+  <div class="cards">
+    <div class="card"><h4><span class="dot" style="background:var(--purple-400)"></span>Admin</h4><p>Полный доступ: схема, API-ключи, команда, настройки, биллинг, удаление пространства.</p></div>
+    <div class="card"><h4><span class="dot" style="background:var(--neutral-400)"></span>Member</h4><p>Работа с данными и генерация PDF. Нет доступа к схеме, ключам, команде и удалению.</p></div>
+  </div>
+
+  <div class="req"><span class="id">FR‑4.1</span><div class="body"><p><span class="prio must">Must</span> Admin приглашает участника по email. Приглашённый, если не зарегистрирован, проходит регистрацию по ссылке и автоматически добавляется в пространство с назначенной ролью.</p></div></div>
+  <div class="req"><span class="id">FR‑4.2</span><div class="body"><p><span class="prio must">Must</span> Сервер обеспечивает разграничение прав по ролям на каждом защищённом эндпоинте. Member не может вызвать операции схемы/ключей даже напрямую через API.</p></div></div>
+  <div class="req"><span class="id">FR‑4.3</span><div class="body"><p><span class="prio must">Must</span> Admin меняет роль и исключает участников. Нельзя удалить или понизить последнего Admin пространства.</p></div></div>
+</section>
+
+<!-- ════════════════════ SCHEMA ════════════════════ -->
+<section class="page" data-screen-label="Схема таблиц и полей">
+  <div class="sectionhead"><span class="num">05</span><h2>Схема: таблицы и поля</h2></div>
+  <p class="lede">Экраны SCH01 Список таблиц · SCH02 Выбор шаблона · SCH03 Редактор полей · SCH04 Настройки таблицы. Это ядро продукта: пользователь описывает данные, сервер материализует схему.</p>
+
+  <div class="req"><span class="id">FR‑5.1</span><div class="body"><p><span class="prio must">Must</span> Создание таблицы: имя (домен-язык), slug. Сервер создаёт физическую таблицу в схеме пространства с системными полями <span class="slug">id</span>, <span class="slug">created_at</span>, <span class="slug">updated_at</span>.</p></div></div>
+  <div class="req"><span class="id">FR‑5.2</span><div class="body"><p><span class="prio must">Must</span> Таблица может создаваться из шаблона (SCH02): набор предзаданных полей под типовой сценарий (напр. «Курс», «Преподаватель», «Клиент»). Шаблон — стартовый набор, поля затем редактируются.</p></div></div>
+  <div class="req"><span class="id">FR‑5.3</span><div class="body"><p><span class="prio must">Must</span> Поддерживаемые типы полей: текст, длинный текст, число, дата, дата-время, логический, выбор из списка (enum), email, телефон, ссылка, файл, связь с другой таблицей.</p><p class="note">Каждый тип поля → корректный тип колонки PostgreSQL + правила валидации.</p></div></div>
+  <div class="req"><span class="id">FR‑5.4</span><div class="body"><p><span class="prio must">Must</span> Атрибуты поля: имя, slug, тип, обязательность, значение по умолчанию, уникальность, для enum — список значений, для связи — целевая таблица и кардинальность.</p></div></div>
+  <div class="req"><span class="id">FR‑5.5</span><div class="body"><p><span class="prio must">Must</span> Изменение полей (добавить/переименовать/изменить тип/удалить) транслируется в безопасную миграцию. Несовместимая смена типа (напр. текст→число с непреобразуемыми данными) отклоняется с понятной ошибкой.</p></div></div>
+  <div class="req"><span class="id">FR‑5.6</span><div class="body"><p><span class="prio must">Must</span> Связи между таблицами реализуются внешними ключами в пределах схемы пространства. При удалении целевой записи — поведение по правилу связи (запрет / обнуление).</p></div></div>
+  <div class="req"><span class="id">FR‑5.7</span><div class="body"><p><span class="prio must">Must</span> Удаление таблицы (SCH04) необратимо удаляет физическую таблицу и данные; затрагивает зависящие выходы (API-маршруты, списки, маппинги PDF) — сервер предупреждает о зависимостях.</p></div></div>
+  <div class="req"><span class="id">FR‑5.8</span><div class="body"><p><span class="prio should">Should</span> Slug поля и таблицы неизменяем после первой публикации в API (ломает интеграции); переименование меняет только человеческое имя.</p></div></div>
+
+  <h3>Эндпоинты</h3>
+  <table class="endpoint-table">
+    <thead><tr><th>Метод</th><th>Путь</th><th>Назначение</th></tr></thead>
+    <tbody>
+      <tr><td><span class="m get">GET</span></td><td><span class="ep">/spaces/{slug}/tables</span></td><td>Список таблиц</td></tr>
+      <tr><td><span class="m post">POST</span></td><td><span class="ep">/spaces/{slug}/tables</span></td><td>Создать таблицу (+ DDL)</td></tr>
+      <tr><td><span class="m get">GET</span></td><td><span class="ep">/spaces/{slug}/tables/{t}</span></td><td>Таблица и её поля</td></tr>
+      <tr><td><span class="m put">PUT</span></td><td><span class="ep">/spaces/{slug}/tables/{t}/fields</span></td><td>Изменить поля (миграция)</td></tr>
+      <tr><td><span class="m del">DELETE</span></td><td><span class="ep">/spaces/{slug}/tables/{t}</span></td><td>Удалить таблицу</td></tr>
+      <tr><td><span class="m get">GET</span></td><td><span class="ep">/templates</span></td><td>Каталог шаблонов таблиц</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ════════════════════ DATA ════════════════════ -->
+<section class="page" data-screen-label="Записи и данные">
+  <div class="sectionhead"><span class="num">06</span><h2>Записи и данные</h2></div>
+  <p class="lede">Экраны D01 Таблица записей · D02 Создание · D03 Редактирование · D04 Удаление. Стандартный CRUD по динамической схеме с серверной пагинацией, сортировкой, фильтром и поиском.</p>
+
+  <div class="req"><span class="id">FR‑6.1</span><div class="body"><p><span class="prio must">Must</span> Чтение записей с серверной пагинацией (limit/offset или курсор), сортировкой по любому полю и фильтрами по полям. Поиск по текстовым полям.</p></div></div>
+  <div class="req"><span class="id">FR‑6.2</span><div class="body"><p><span class="prio must">Must</span> Создание и редактирование валидируют значения по схеме поля (тип, обязательность, уникальность, диапазон enum). Ошибки возвращаются по полям.</p></div></div>
+  <div class="req"><span class="id">FR‑6.3</span><div class="body"><p><span class="prio must">Must</span> Удаление записи (D04) с подтверждением. Поддержка пакетного удаления выбранных записей.</p></div></div>
+  <div class="req"><span class="id">FR‑6.4</span><div class="body"><p><span class="prio should">Should</span> Импорт записей из CSV/XLSX с сопоставлением столбцов полям и отчётом об ошибках построчно. Экспорт текущей выборки в CSV.</p></div></div>
+  <div class="req"><span class="id">FR‑6.5</span><div class="body"><p><span class="prio should">Should</span> Поля-связи при чтении возвращают читаемое представление связанной записи (а не только id).</p></div></div>
+
+  <h3>Формат ответа списка записей</h3>
+  <pre><span class="c">// GET /api/{space}/{table}?limit=20&amp;sort=-created_at&amp;status=active</span>
+{
+  <span class="k">"data"</span>: [
+    { <span class="k">"id"</span>: <span class="s">"rec_8f2a"</span>, <span class="k">"name"</span>: <span class="s">"Основы права"</span>, <span class="k">"hours"</span>: <span class="n">72</span> }
+  ],
+  <span class="k">"meta"</span>: { <span class="k">"total"</span>: <span class="n">128</span>, <span class="k">"limit"</span>: <span class="n">20</span>, <span class="k">"offset"</span>: <span class="n">0</span> }
+}</pre>
+
+  <h3>Эндпоинты (внутренние, для UI приложения)</h3>
+  <table class="endpoint-table">
+    <thead><tr><th>Метод</th><th>Путь</th><th>Назначение</th></tr></thead>
+    <tbody>
+      <tr><td><span class="m get">GET</span></td><td><span class="ep">/spaces/{slug}/tables/{t}/records</span></td><td>Список с пагинацией/фильтром</td></tr>
+      <tr><td><span class="m post">POST</span></td><td><span class="ep">/spaces/{slug}/tables/{t}/records</span></td><td>Создать запись</td></tr>
+      <tr><td><span class="m put">PUT</span></td><td><span class="ep">/spaces/{slug}/tables/{t}/records/{id}</span></td><td>Обновить запись</td></tr>
+      <tr><td><span class="m del">DELETE</span></td><td><span class="ep">/spaces/{slug}/tables/{t}/records/{id}</span></td><td>Удалить запись</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ════════════════════ API + KEYS ════════════════════ -->
+<section class="page" data-screen-label="REST API и ключи">
+  <div class="sectionhead"><span class="num">07</span><h2>Авто-REST API и Swagger</h2></div>
+  <p class="lede">Экраны API01 Обзор · API03 Swagger. Главный выход продукта: каждая таблица немедленно доступна как публичный REST-ресурс с авто-документацией.</p>
+
+  <div class="req"><span class="id">FR‑7.1</span><div class="body"><p><span class="prio must">Must</span> Для каждой таблицы автоматически генерируются CRUD-эндпоинты по slug пространства и таблицы. Никакой ручной выкатки кода — маршрутизация динамическая.</p></div></div>
+  <div class="req"><span class="id">FR‑7.2</span><div class="body"><p><span class="prio must">Must</span> Публичный API авторизуется по API-ключу (заголовок). Ключ привязан к пространству и определяет доступ только к его данным.</p></div></div>
+  <div class="req"><span class="id">FR‑7.3</span><div class="body"><p><span class="prio must">Must</span> Сервер автоматически отдаёт OpenAPI/Swagger-спецификацию пространства, отражающую текущую схему. Изменение полей мгновенно обновляет спецификацию.</p></div></div>
+  <div class="req"><span class="id">FR‑7.4</span><div class="body"><p><span class="prio must">Must</span> Экран API01 показывает статус каждого ресурса (online / setup / offline), базовый URL и список эндпоинтов с методами. Статусы вычисляются сервером.</p></div></div>
+  <div class="req"><span class="id">FR‑7.5</span><div class="body"><p><span class="prio should">Should</span> Ограничение частоты запросов на ключ и счётчик использования (для тарифов и метрик).</p></div></div>
+
+  <h3>Публичный REST на таблицу</h3>
+  <table class="endpoint-table">
+    <thead><tr><th>Метод</th><th>Путь</th><th>Назначение</th></tr></thead>
+    <tbody>
+      <tr><td><span class="m get">GET</span></td><td><span class="ep">/api/{space}/{table}</span></td><td>Список (пагинация, фильтр, сортировка)</td></tr>
+      <tr><td><span class="m get">GET</span></td><td><span class="ep">/api/{space}/{table}/{id}</span></td><td>Одна запись</td></tr>
+      <tr><td><span class="m post">POST</span></td><td><span class="ep">/api/{space}/{table}</span></td><td>Создать</td></tr>
+      <tr><td><span class="m put">PUT</span></td><td><span class="ep">/api/{space}/{table}/{id}</span></td><td>Обновить</td></tr>
+      <tr><td><span class="m del">DELETE</span></td><td><span class="ep">/api/{space}/{table}/{id}</span></td><td>Удалить</td></tr>
+      <tr><td><span class="m get">GET</span></td><td><span class="ep">/api/{space}/openapi.json</span></td><td>Авто-спецификация Swagger</td></tr>
+    </tbody>
+  </table>
+
+  <div class="sectionhead"><span class="num">08</span><h2>API-ключи</h2></div>
+  <p class="lede">Экран API02. Управление ключами доступа к публичному API пространства.</p>
+
+  <div class="req"><span class="id">FR‑8.1</span><div class="body"><p><span class="prio must">Must</span> Admin создаёт именованные ключи. Полное значение ключа показывается один раз при создании; далее хранится и отображается только префикс. На сервере хранится хэш.</p></div></div>
+  <div class="req"><span class="id">FR‑8.2</span><div class="body"><p><span class="prio must">Must</span> Ключ можно отозвать (немедленно перестаёт работать). Для каждого ключа: имя, префикс, дата создания, последнее использование, статус.</p></div></div>
+  <div class="req"><span class="id">FR‑8.3</span><div class="body"><p><span class="prio should">Should</span> Область действия ключа: только чтение или чтение+запись.</p></div></div>
+
+  <div class="callout warn"><span class="ct">Безопасность</span> Ключ показывается один раз («Сохрани ключ — он показывается один раз»). Сервер не хранит и не может восстановить открытое значение — только хэш и префикс для идентификации.</div>
+</section>
+
+<!-- ════════════════════ FILES / LISTS ════════════════════ -->
+<section class="page" data-screen-label="Публичные списки">
+  <div class="sectionhead"><span class="num">09</span><h2>Публичные списки (выходы)</h2></div>
+  <p class="lede">Группа экранов FILES. Опубликованные списки — выход, который фронтенд клиента забирает по slug, без знания внутренних id и без хардкода схемы.</p>
+
+  <div class="req"><span class="id">FR‑9.1</span><div class="body"><p><span class="prio must">Must</span> Пользователь публикует выборку из таблицы как именованный список с собственным slug. Список читается публично по slug без API-ключа (или по публичному режиму, настраиваемому).</p></div></div>
+  <div class="req"><span class="id">FR‑9.2</span><div class="body"><p><span class="prio must">Must</span> Конфигурация списка задаёт: исходную таблицу, набор и порядок отображаемых полей, фильтр, сортировку, лимит. Ответ отдаёт только выбранные поля под их публичными именами.</p></div></div>
+  <div class="req"><span class="id">FR‑9.3</span><div class="body"><p><span class="prio must">Must</span> Публичный ответ стабилен по контракту: фронтенд обращается по slug списка, а не по физическим идентификаторам. Переименование внутренних полей не ломает публичный список, пока его конфигурация сохраняет публичные имена.</p></div></div>
+  <div class="req"><span class="id">FR‑9.4</span><div class="body"><p><span class="prio should">Should</span> Кэширование публичных ответов с инвалидацией при изменении данных или конфигурации. Поддержка CORS для чтения с произвольных доменов.</p></div></div>
+  <div class="req"><span class="id">FR‑9.5</span><div class="body"><p><span class="prio should">Should</span> Список можно снять с публикации (перестаёт отвечать) без удаления данных.</p></div></div>
+
+  <h3>Эндпоинты</h3>
+  <table class="endpoint-table">
+    <thead><tr><th>Метод</th><th>Путь</th><th>Назначение</th></tr></thead>
+    <tbody>
+      <tr><td><span class="m get">GET</span></td><td><span class="ep">/spaces/{slug}/lists</span></td><td>Список опубликованных списков</td></tr>
+      <tr><td><span class="m post">POST</span></td><td><span class="ep">/spaces/{slug}/lists</span></td><td>Опубликовать список</td></tr>
+      <tr><td><span class="m put">PUT</span></td><td><span class="ep">/spaces/{slug}/lists/{listSlug}</span></td><td>Изменить конфигурацию / снять с публикации</td></tr>
+      <tr><td><span class="m get">GET</span></td><td><span class="ep">/lists/{space}/{listSlug}</span></td><td>Публичное чтение по slug</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout"><span class="ct">Принцип</span> «Без id и без хардкода»: клиентский фронтенд должен уметь рисовать список, зная только его slug и публичные имена полей из ответа. Это позволяет менять данные и схему на стороне Nerion, не выкатывая клиента.</div>
+</section>
+
+<!-- ════════════════════ PDF ════════════════════ -->
+<section class="page" data-screen-label="Генерация PDF">
+  <div class="sectionhead"><span class="num">10</span><h2>Генерация PDF по ГОСТ</h2></div>
+  <p class="lede">Экраны PDF01 Шаблоны · PDF02 Маппинг полей · PDF03 Предпросмотр (+ одиночная и пакетная генерация, архив). Второй ключевой выход: документы, которые принимает регулятор.</p>
+
+  <div class="req"><span class="id">FR‑10.1</span><div class="body"><p><span class="prio must">Must</span> Пользователь загружает шаблон документа (DOCX) с плейсхолдерами. Сервер разбирает шаблон и извлекает список плейсхолдеров для маппинга.</p></div></div>
+  <div class="req"><span class="id">FR‑10.2</span><div class="body"><p><span class="prio must">Must</span> Маппинг (PDF02): каждому плейсхолдеру шаблона сопоставляется поле таблицы или вычисляемое выражение. Маппинг сохраняется и переиспользуется.</p></div></div>
+  <div class="req"><span class="id">FR‑10.3</span><div class="body"><p><span class="prio must">Must</span> Генерация: сервер подставляет данные записи в шаблон и рендерит PDF (Python + WeasyPrint) с сохранением форматирования по ГОСТ. Предпросмотр (PDF03) показывает результат до выпуска.</p></div></div>
+  <div class="req"><span class="id">FR‑10.4</span><div class="body"><p><span class="prio must">Must</span> Пакетная генерация: один шаблон × выборка записей → набор PDF (по файлу на запись или единый сшитый документ). Выполняется асинхронной задачей с прогрессом и статусом.</p></div></div>
+  <div class="req"><span class="id">FR‑10.5</span><div class="body"><p><span class="prio must">Must</span> Сгенерированные документы складываются в архив пространства: имя, шаблон, источник, дата, автор, ссылка на скачивание. Файлы хранятся в Object Storage.</p></div></div>
+  <div class="req"><span class="id">FR‑10.6</span><div class="body"><p><span class="prio should">Should</span> Статус шаблона (готов / требует маппинга / ошибка) вычисляется сервером и отражается на PDF01.</p></div></div>
+
+  <h3>Эндпоинты</h3>
+  <table class="endpoint-table">
+    <thead><tr><th>Метод</th><th>Путь</th><th>Назначение</th></tr></thead>
+    <tbody>
+      <tr><td><span class="m get">GET</span></td><td><span class="ep">/spaces/{slug}/pdf/templates</span></td><td>Список шаблонов и их статус</td></tr>
+      <tr><td><span class="m post">POST</span></td><td><span class="ep">/spaces/{slug}/pdf/templates</span></td><td>Загрузить DOCX, извлечь плейсхолдеры</td></tr>
+      <tr><td><span class="m put">PUT</span></td><td><span class="ep">/spaces/{slug}/pdf/templates/{id}/mapping</span></td><td>Сохранить маппинг полей</td></tr>
+      <tr><td><span class="m post">POST</span></td><td><span class="ep">/spaces/{slug}/pdf/templates/{id}/preview</span></td><td>Предпросмотр по одной записи</td></tr>
+      <tr><td><span class="m post">POST</span></td><td><span class="ep">/spaces/{slug}/pdf/generate</span></td><td>Одиночная / пакетная генерация (async)</td></tr>
+      <tr><td><span class="m get">GET</span></td><td><span class="ep">/spaces/{slug}/pdf/jobs/{id}</span></td><td>Статус и прогресс задачи</td></tr>
+      <tr><td><span class="m get">GET</span></td><td><span class="ep">/spaces/{slug}/pdf/archive</span></td><td>Архив документов</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ════════════════════ STORAGE + SETTINGS ════════════════════ -->
+<section class="page" data-screen-label="Хранилище и настройки">
+  <div class="sectionhead"><span class="num">11</span><h2>Файлы и хранилище</h2></div>
+  <p class="lede">Файловые поля записей, загружаемые DOCX-шаблоны и сгенерированные PDF хранятся в Yandex Object Storage.</p>
+
+  <div class="req"><span class="id">FR‑11.1</span><div class="body"><p><span class="prio must">Must</span> Загрузка файлов через сервер с проверкой типа и размера. Файлы изолированы по пространству; путь не должен раскрывать данные другого арендатора.</p></div></div>
+  <div class="req"><span class="id">FR‑11.2</span><div class="body"><p><span class="prio must">Must</span> Доступ к приватным файлам — по подписанным временным ссылкам. Публичные выходы (списки) отдают файлы согласно режиму публикации.</p></div></div>
+  <div class="req"><span class="id">FR‑11.3</span><div class="body"><p><span class="prio should">Should</span> При удалении записи/таблицы/пространства связанные файлы помечаются на удаление и очищаются фоновой задачей.</p></div></div>
+
+  <div class="sectionhead"><span class="num">12</span><h2>Настройки и аккаунт</h2></div>
+  <p class="lede">Экраны SET01 Настройки пространства · SET03 Аккаунт.</p>
+
+  <div class="req"><span class="id">FR‑12.1</span><div class="body"><p><span class="prio must">Must</span> Admin меняет имя пространства и параметры. Danger zone — удаление пространства с подтверждением вводом имени (FR‑3.3).</p></div></div>
+  <div class="req"><span class="id">FR‑12.2</span><div class="body"><p><span class="prio must">Must</span> Пользователь меняет имя, email (с переподтверждением) и пароль (с инвалидацией прочих сессий).</p></div></div>
+  <div class="req"><span class="id">FR‑12.3</span><div class="body"><p><span class="prio should">Should</span> Удаление аккаунта: запрет, пока пользователь — единственный Admin непустого пространства; иначе передача прав или удаление пространства.</p></div></div>
+
+  <h3>Журнал и аудит</h3>
+  <div class="req"><span class="id">FR‑12.4</span><div class="body"><p><span class="prio should">Should</span> Сервер ведёт журнал значимых действий (вход, изменение схемы, выпуск/отзыв ключа, генерация PDF, удаление) с автором и временем — для аудита и поддержки.</p></div></div>
+</section>
+
+<!-- ════════════════════ NFR ════════════════════ -->
+<section class="page" data-screen-label="Нефункциональные требования">
+  <div class="sectionhead"><span class="num">13</span><h2>Нефункциональные требования</h2></div>
+
+  <div class="cards">
+    <div class="card"><h4><span class="dot" style="background:var(--purple-400)"></span>Безопасность</h4><p>HTTPS везде; хэш паролей и ключей; защита от SQLi при динамическом DDL (белый список идентификаторов, параметризация); RBAC на каждом эндпоинте; rate limiting.</p></div>
+    <div class="card"><h4><span class="dot" style="background:var(--green-500)"></span>Изоляция данных</h4><p>Жёсткая многоарендность: схема-на-пространство, проверка принадлежности до доступа к схеме, отсутствие кросс-схемных запросов.</p></div>
+    <div class="card"><h4><span class="dot" style="background:var(--blue-500)"></span>Производительность</h4><p>Чтение списка ≤ 300 мс при 10 тыс. записей; серверная пагинация; индексация по сортируемым/фильтруемым полям.</p></div>
+    <div class="card"><h4><span class="dot" style="background:var(--amber-500)"></span>Асинхронность</h4><p>Пакетная генерация PDF и тяжёлые миграции — фоновые задачи с очередью, статусом и повторами.</p></div>
+    <div class="card"><h4><span class="dot" style="background:var(--purple-400)"></span>Надёжность</h4><p>Ежедневный бэкап БД и Object Storage; транзакционность DDL+метаданных (откат при сбое миграции); идемпотентность создающих операций по ключу запроса.</p></div>
+    <div class="card"><h4><span class="dot" style="background:var(--green-500)"></span>Наблюдаемость</h4><p>Структурные логи, метрики (запросы API на ключ, время рендера PDF), алёрты на ошибки 5xx и упавшие задачи.</p></div>
+    <div class="card"><h4><span class="dot" style="background:var(--blue-500)"></span>Совместимость</h4><p>Стабильный контракт публичного API и списков; неломающие изменения схемы версионируются; slug-идентификаторы неизменяемы после публикации.</p></div>
+    <div class="card"><h4><span class="dot" style="background:var(--amber-500)"></span>Локализация</h4><p>Серверные сообщения об ошибках — на русском, в тоне продукта; коды ошибок машинно-читаемы для клиента.</p></div>
+  </div>
+
+  <h3>Формат ошибок</h3>
+  <pre>{
+  <span class="k">"error"</span>: {
+    <span class="k">"code"</span>: <span class="s">"validation_failed"</span>,
+    <span class="k">"message"</span>: <span class="s">"Проверь поля и попробуй ещё раз."</span>,
+    <span class="k">"fields"</span>: {
+      <span class="k">"hours"</span>: <span class="s">"Должно быть числом"</span>
+    }
+  }
+}</pre>
+
+  <h3>Открытые вопросы к ревью</h3>
+  <ul class="tight">
+    <li>Тарифные лимиты: точные значения по числу пространств, таблиц, записей, запросов API и объёму хранилища.</li>
+    <li>Режим публичных списков: всегда публичны или с публичным токеном? Нужен ли троттлинг анонимного чтения.</li>
+    <li>Связи таблиц: ограничиться связью «один-ко-многим» в MVP или сразу «многие-ко-многим».</li>
+    <li>Версионирование публичного API при изменении схемы — нужен ли явный номер версии в пути.</li>
+    <li>Биллинг и вебхуки — вне этого документа; уточнить точку интеграции.</li>
+  </ul>
+
+  <p class="muted" style="margin-top:24px; font-size:9pt; border-top:0.5px solid var(--border-default); padding-top:12px;">Nerion · Функциональные требования к бекенду · v0.4 · черновик к ревью. Идентификаторы FR‑N.N стабильны и пригодны для трассировки в задачах.</p>
+</section>
+
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 160 112" xmlns="http://www.w3.org/2000/svg">
+    <rect width="160" height="112" fill="#F4F3FB"/>
+    <rect x="44" y="14" width="72" height="84" rx="5" fill="white" stroke="#E2E0E5" stroke-width="1"/>
+    <rect x="52" y="24" width="20" height="20" rx="5" fill="#7F77DD"/>
+    <text x="62" y="38" font-family="sans-serif" font-size="13" fill="white" font-weight="700" text-anchor="middle">N</text>
+    <rect x="52" y="54" width="56" height="4" rx="2" fill="#161519"/>
+    <rect x="52" y="62" width="44" height="4" rx="2" fill="#161519"/>
+    <rect x="52" y="74" width="56" height="2.5" rx="1.25" fill="#CECCD3"/>
+    <rect x="52" y="80" width="52" height="2.5" rx="1.25" fill="#CECCD3"/>
+    <rect x="52" y="86" width="40" height="2.5" rx="1.25" fill="#7F77DD"/>
+  </svg>
+</template>
+<script>
+(async () => {
+  if (!document.title || !document.title.trim()) document.title = "Nerion - Функциональные требования к бекенду";
+  // Prepend so page-supplied @page / break rules (deck-stage's margin:0,
+  // author CSS) keep source-order precedence over the baseline.
+  const baseCss = document.createElement('style');
+  baseCss.textContent = "@media print {\n  @page { margin: 0.5cm; }\n  figure, table { break-inside: avoid; }\n  *, *::before, *::after {\n    print-color-adjust: exact; -webkit-print-color-adjust: exact;\n    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;\n    animation-delay: -99s !important; animation-duration: .001s !important;\n    animation-iteration-count: 1 !important; animation-fill-mode: both !important;\n    animation-play-state: running !important; transition-duration: 0s !important;\n  }\n}";
+  document.head.prepend(baseCss);
+  if (document.readyState === 'loading') {
+    await new Promise((r) => document.addEventListener('DOMContentLoaded', r, { once: true }));
+  }
+  let ds = document.querySelector('deck-stage');
+  // whenDefined never resolves when nothing registers the element, so only
+  // await it when a <deck-stage> tag exists (and race a timeout regardless).
+  if (ds && !customElements.get('deck-stage')) {
+    try {
+      await Promise.race([
+        customElements.whenDefined('deck-stage'),
+        new Promise((r) => setTimeout(r, 3000)),
+      ]);
+    } catch (e) {}
+    ds = document.querySelector('deck-stage');
+  }
+  // dc-runtime assigns window.DCLogic at init and mounts into #dc-root on
+  // DOMContentLoaded; settle on that subtree so React has rendered before
+  // print(). Non-DC pages fall through to weighing body.
+  const isDc = !ds && 'DCLogic' in window;
+  const settleRoot = ds || (isDc ? document.getElementById('dc-root') : null) || document.body;
+  if (settleRoot) {
+    // Weigh only content children — skip script/style/template so inline
+    // Babel/CSS doesn't register as stable "content" before the framework
+    // has mounted anything.
+    const MEDIA = 'img,svg,canvas,video,picture,iframe,embed,object';
+    const weigh = () => {
+      let text = 0, media = 0;
+      for (const c of settleRoot.children) {
+        const t = c.tagName;
+        if (t === 'SCRIPT' || t === 'STYLE' || t === 'TEMPLATE') continue;
+        text += (c.textContent || '').trim().length;
+        media += c.querySelectorAll(MEDIA).length + (c.matches(MEDIA) ? 1 : 0);
+      }
+      return text + media * 100;
+    };
+    // "Non-zero and stable" alone is not sufficient to mean rendered: generic
+    // body can carry a static shell while async main content is pending, and
+    // #dc-root can carry the root DC's static text while child refs are still
+    // .sc-placeholder boxes. Gate generic on readyState 'complete', and never
+    // accept stability while a dc-runtime placeholder is present.
+    const isGeneric = settleRoot === document.body;
+    const deadline = Date.now() + 15000;
+    let last = -1, stable = 0;
+    while (Date.now() < deadline) {
+      const n = weigh();
+      const ready =
+        (!isGeneric || document.readyState === 'complete') &&
+        !settleRoot.querySelector('.sc-placeholder');
+      if (n > 0 && n === last && ready) { if (++stable >= 2) break; } else { stable = 0; }
+      last = n;
+      await new Promise((r) => setTimeout(r, 250));
+    }
+  }
+  // Reveal content gated on scroll or visibility before printing. Lazy <img>,
+  // IntersectionObserver fade-ins, and collapsed <details> don't render while
+  // off-screen, so a long page would print with them blank or closed. Open
+  // every <details>, force native-lazy images eager, and scroll the document
+  // through its full height to trip lazy-load + IO; then wait (bounded) for the
+  // newly-triggered images. Inert for deck-stage (slides aren't scroll-gated).
+  try {
+    for (const d of document.querySelectorAll('details')) d.open = true;
+    for (const img of document.querySelectorAll('img[loading="lazy"]'))
+      img.loading = 'eager';
+    const scroller = document.scrollingElement || document.documentElement;
+    const full = Math.max(scroller.scrollHeight, document.body.scrollHeight);
+    const step = window.innerHeight || 800;
+    for (let y = 0; y <= full; y += step) {
+      window.scrollTo(0, y);
+      await new Promise((r) => requestAnimationFrame(r));
+    }
+    window.scrollTo(0, 0);
+    await Promise.race([
+      Promise.all(
+        [...document.images].map((img) =>
+          img.complete
+            ? null
+            : new Promise((res) => {
+                img.addEventListener('load', res, { once: true });
+                img.addEventListener('error', res, { once: true });
+              })
+        )
+      ),
+      new Promise((r) => setTimeout(r, 4000)),
+    ]);
+  } catch (e) {}
+  try { await document.fonts.ready; } catch (e) {}
+  // Jump every animation to its end state so print() never captures a slide
+  // mid-entrance. Ordering matters: the 0s-transition style must be live
+  // BEFORE data-deck-active is set so attribute-keyed transitions don't
+  // start a (now-0s) run from the pre-active base.
+  const st = document.createElement('style');
+  st.textContent = '*,*::before,*::after{animation-delay:-99s !important;animation-duration:.001s !important;animation-iteration-count:1 !important;animation-fill-mode:both !important;animation-play-state:running !important;transition-duration:0s !important}';
+  document.head.appendChild(st);
+  for (const d of document.querySelectorAll('deck-stage')) {
+    for (const c of d.children) {
+      const t = c.tagName;
+      if (t === 'SCRIPT' || t === 'STYLE' || t === 'TEMPLATE') continue;
+      c.setAttribute('data-deck-active', '');
+    }
+  }
+  // Re-append deck-stage's @page last so no author @page can add a margin and
+  // spill each full-bleed slide onto two sheets. Backstop for old copies.
+  if (ds) {
+    let pg = document.getElementById('deck-stage-print-page');
+    if (!pg) {
+      pg = document.createElement('style');
+      pg.textContent = '@page{size:' + (+ds.getAttribute('width') || 1920) +
+        'px ' + (+ds.getAttribute('height') || 1080) + 'px;margin:0}';
+    }
+    document.body.appendChild(pg);
+  }
+  try {
+    const sweep = () => {
+      for (const a of document.getAnimations()) {
+        try { a.finish(); } catch (e) {
+          try { a.currentTime = (a.effect && a.effect.getComputedTiming().duration) || 0; a.pause(); } catch (e2) {}
+        }
+      }
+    };
+    sweep();
+    await new Promise((r) => requestAnimationFrame(r));
+    sweep();
+    await new Promise((r) => requestAnimationFrame(r));
+  } catch (e) {}
+  // Relax break-inside on oversized elements. An element taller than a
+  // printable page can't honor break-inside: avoid — browsers either overflow
+  // it or push it whole to the next page, leaving a blank gap, then break it
+  // anyway at an arbitrary point. After the final layout (content revealed,
+  // animations jumped), find elements taller than a page that still compute
+  // break-inside: avoid and reset them to auto, so the browser breaks them at
+  // their children's boundaries instead (children keep their own avoid). PAGE_PX
+  // is a conservative portrait estimate at 96 CSS px/in — Letter/A4 usable
+  // height minus our 0.5in margins — so only clearly-oversized elements are
+  // touched and under-page elements still stay whole. Skipped for decks, whose
+  // slides are sized to the page.
+  try {
+    if (!document.querySelector('deck-stage')) {
+      const PAGE_PX = 1024;
+      // Our print defaults add a body padding inset only when we also zero the
+      // @page margin; computed style can't tell us (it reports screen media),
+      // so read the injected rule directly.
+      const defaults = document.querySelector('style[data-omelette-print-defaults]');
+      const pageInset = /body\s*\{[^}]*padding/.test(defaults ? defaults.textContent || '' : '');
+      const SEL = 'section,article,figure,table,pre,blockquote,[class~="card" i],[class~="page" i],[class~="sheet" i]';
+      for (const el of document.body.querySelectorAll(SEL)) {
+        if (el instanceof HTMLElement && el.offsetHeight > PAGE_PX) {
+          el.setAttribute('data-om-oversized', '');
+          // Fake-paged docs simulate sheets with over-tall break-after:page
+          // boxes; honoring the break spills half-blank pages and ends a
+          // colored box mid-sheet. Flow them, and (only when we own the page
+          // inset) drop the redundant padding/background via the rule below.
+          const cs = getComputedStyle(el);
+          if (cs.breakAfter === 'page' || cs.pageBreakAfter === 'always') {
+            el.setAttribute('data-om-fakepage', '');
+          }
+        }
+      }
+      const ost = document.createElement('style');
+      ost.textContent = '@media print{' +
+        '[data-om-oversized]{break-inside:auto !important;page-break-inside:auto !important}' +
+        '[data-om-fakepage]{break-after:auto !important;page-break-after:auto !important}' +
+        (pageInset ? '[data-om-fakepage]{padding:0 !important;background:none !important}' : '') +
+        '}';
+      document.head.appendChild(ost);
+    }
+  } catch (e) {}
+  // macOS Preview renders Skia-PDF Luminosity soft-masks as opaque grey boxes;
+  // swap the CSS that triggers them for Preview-safe forms.
+  try {
+    for (const el of document.body.querySelectorAll('*')) {
+      const cs = getComputedStyle(el);
+
+      if (cs.boxShadow !== 'none' && cs.filter === 'none') {
+        const outs = [], kept = [];
+        for (const s of cs.boxShadow.split(/,(?![^(]*[)])/)) {
+          const t = s.trim();
+          const m = t.match(/^(rgba?[(][^)]+[)]) (-?[0-9.]+px) (-?[0-9.]+px) ([0-9.]+px) -?[0-9.]+px$/);
+          if (m && parseFloat(m[4]) > 0) outs.push('drop-shadow(' + m[2] + ' ' + m[3] + ' ' + m[4] + ' ' + m[1] + ')');
+          else kept.push(t);
+        }
+        if (outs.length) {
+          el.style.setProperty('filter', outs.join(' '), 'important');
+          el.style.setProperty('box-shadow', kept.join(', ') || 'none', 'important');
+        }
+      }
+
+      const mask = cs.maskImage && cs.maskImage !== 'none' ? cs.maskImage : cs.webkitMaskImage;
+      if (mask && mask !== 'none' && cs.filter === 'none') el.style.setProperty('filter', 'opacity(1)', 'important');
+    }
+  } catch (e) {}
+  setTimeout(() => { try { window.print(); } catch (e) {} }, 200);
+})();
+</script>
+</body>
+</html>

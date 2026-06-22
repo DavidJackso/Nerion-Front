@@ -1,22 +1,52 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useSpacesStore } from '@/stores/spaces.js'
+import { useAuthStore } from '@/stores/auth.js'
 import NButton from '@/components/primitives/NButton.vue'
 import NIcon from '@/components/primitives/NIcon.vue'
 import NModal from '@/components/primitives/NModal.vue'
 import NInput from '@/components/primitives/NInput.vue'
-import { SPACES } from '@/data/mock.js'
 
 const router = useRouter()
+const spacesStore = useSpacesStore()
+const auth = useAuthStore()
 const showCreate = ref(false)
-const newName = ref('Кафедра информатики')
-const newSlug = ref('informatics-dept')
+const newName = ref('')
+const newSlug = ref('')
 const hovered = ref(null)
+const error = ref('')
 
-function createSpace() {
-  showCreate.value = false
-  router.push({ name: 'data-prep' })
+onMounted(() => spacesStore.fetchSpaces())
+
+function openSpace(s) {
+  router.push(`/spaces/${s.slug}/tables`)
 }
+
+async function createSpace() {
+  error.value = ''
+  try {
+    const sp = await spacesStore.createSpace(newName.value, newSlug.value)
+    showCreate.value = false
+    newName.value = ''
+    newSlug.value = ''
+    router.push(`/spaces/${sp.slug}/tables`)
+  } catch (e) {
+    error.value = e.message
+  }
+}
+
+function logout() {
+  auth.logout().then(() => router.push('/login'))
+}
+
+const PALETTE = [
+  { color: 'var(--purple-100)', fg: 'var(--purple-700)' },
+  { color: '#FFE4E6', fg: '#9F1239' },
+  { color: '#DBEAFE', fg: '#1E40AF' },
+  { color: '#D1FAE5', fg: 'var(--green-700)' },
+]
+function palette(i) { return PALETTE[i % PALETTE.length] }
 </script>
 
 <template>
@@ -25,8 +55,11 @@ function createSpace() {
       <div style="width: 26px; height: 26px; border-radius: 6px; background: var(--brand-primary); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 13px">N</div>
       <span style="font-size: 14px; font-weight: 700; letter-spacing: -0.01em">Nerion</span>
       <div style="flex: 1" />
-      <span style="font-size: 13px; color: var(--fg-2)">anna.ivanova@msu.ru</span>
-      <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--purple-200); color: var(--purple-700); display: grid; place-items: center; font-weight: 700; font-size: 12px">АИ</div>
+      <span style="font-size: 13px; color: var(--fg-2)">{{ auth.user?.email }}</span>
+      <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--purple-200); color: var(--purple-700); display: grid; place-items: center; font-weight: 700; font-size: 12px">{{ auth.initials() }}</div>
+      <button @click="logout" style="background: 0; border: 0; cursor: pointer; color: var(--fg-3); padding: 6px; display: flex">
+        <NIcon name="logout" :size="14" />
+      </button>
     </header>
 
     <main style="max-width: 960px; margin: 0 auto; padding: 48px 32px">
@@ -41,10 +74,17 @@ function createSpace() {
         </NButton>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
+      <div v-if="spacesStore.loading" style="text-align: center; padding: 64px; color: var(--fg-3); font-size: 14px">Загрузка…</div>
+
+      <div v-else-if="!spacesStore.spaces.length" style="text-align: center; padding: 64px; color: var(--fg-3)">
+        <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px">Нет пространств</div>
+        <div style="font-size: 13px">Создай первое пространство, чтобы начать работу.</div>
+      </div>
+
+      <div v-else style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
         <div
-          v-for="s in SPACES" :key="s.id"
-          @click="router.push({ name: 'data-prep' })"
+          v-for="(s, i) in spacesStore.spaces" :key="s.id"
+          @click="openSpace(s)"
           @mouseenter="hovered = s.id"
           @mouseleave="hovered = null"
           :style="{
@@ -59,10 +99,10 @@ function createSpace() {
           <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px">
             <div :style="{
               width: '44px', height: '44px', borderRadius: '10px',
-              background: s.color, color: s.fg,
+              background: palette(i).color, color: palette(i).fg,
               display: 'grid', placeItems: 'center', flexShrink: 0,
             }">
-              <NIcon :name="s.icon" :size="20" />
+              <NIcon name="box" :size="20" />
             </div>
             <div style="flex: 1; min-width: 0">
               <div style="font-size: 15px; font-weight: 600; color: var(--fg-1); margin-bottom: 4px">{{ s.name }}</div>
@@ -70,30 +110,17 @@ function createSpace() {
             </div>
             <NIcon name="chev" :size="14" color="var(--fg-3)" :style="{ opacity: hovered === s.id ? 1 : 0, transition: 'opacity 120ms' }" />
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding-top: 14px; border-top: 0.5px solid var(--border-default)">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-top: 14px; border-top: 0.5px solid var(--border-default)">
             <div>
-              <div style="font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums">{{ s.tables }}</div>
+              <div style="font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums">{{ s.table_count }}</div>
               <div style="font-size: 11px; color: var(--fg-3)">таблиц</div>
             </div>
             <div>
-              <div style="font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums">{{ s.members }}</div>
-              <div style="font-size: 11px; color: var(--fg-3)">в команде</div>
-            </div>
-            <div>
-              <div style="font-size: 13px; font-weight: 500; color: var(--fg-2)">{{ s.updated }}</div>
-              <div style="font-size: 11px; color: var(--fg-3)">обновлено</div>
+              <div style="font-size: 13px; font-weight: 500; color: var(--fg-2)">ID {{ s.id }}</div>
+              <div style="font-size: 11px; color: var(--fg-3)">пространство</div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div style="margin-top: 28px; padding: 16px 20px; background: var(--brand-tint); border: 0.5px solid var(--purple-100); border-radius: 8px; display: flex; align-items: center; gap: 14px">
-        <NIcon name="box" :size="18" color="var(--purple-600)" />
-        <div style="flex: 1">
-          <div style="font-size: 13px; font-weight: 600; color: var(--purple-700)">На тарифе Free доступно ещё 1 пространство</div>
-          <div style="font-size: 12px; color: var(--fg-2); margin-top: 2px">Pro снимает лимит и добавляет 100k записей в каждом.</div>
-        </div>
-        <NButton variant="secondary" size="sm">Сравнить тарифы</NButton>
       </div>
     </main>
 
@@ -101,18 +128,18 @@ function createSpace() {
       <div style="display: flex; flex-direction: column; gap: 18px">
         <div>
           <label style="font-size: 12px; color: var(--fg-2); font-weight: 500; display: block; margin-bottom: 6px">Название</label>
-          <NInput v-model="newName" />
+          <NInput v-model="newName" placeholder="Кафедра математики" />
           <p style="font-size: 11px; color: var(--fg-3); margin-top: 5px">Видно только команде. Можно изменить позже.</p>
         </div>
         <div>
           <label style="font-size: 12px; color: var(--fg-2); font-weight: 500; display: block; margin-bottom: 6px">Slug</label>
           <div style="display: flex; align-items: center; height: 36px; border: 0.5px solid var(--border-strong); border-radius: 6px; overflow: hidden; font-family: var(--font-mono); font-size: 13px">
             <span style="padding: 0 10px; background: var(--bg-2); color: var(--fg-3); height: 100%; display: flex; align-items: center; border-right: 0.5px solid var(--border-default); white-space: nowrap">app.nerion.ru/</span>
-            <input v-model="newSlug" style="flex: 1; height: 100%; padding: 0 10px; border: 0; outline: 0; font-family: inherit; font-size: 13px; color: var(--fg-1); background: transparent" />
-            <span style="padding: 0 10px; color: var(--green-500)"><NIcon name="check" :size="14" /></span>
+            <input v-model="newSlug" style="flex: 1; height: 100%; padding: 0 10px; border: 0; outline: 0; font-family: inherit; font-size: 13px; color: var(--fg-1); background: transparent" placeholder="my-space" />
           </div>
           <p style="font-size: 11px; color: var(--fg-3); margin-top: 5px">Используется в URL API. a–z, 0–9, дефис.</p>
         </div>
+        <p v-if="error" style="color: var(--red-600, #dc2626); font-size: 13px; margin: 0">{{ error }}</p>
       </div>
       <template #footer>
         <NButton variant="ghost" size="md" @click="showCreate = false">Отмена</NButton>

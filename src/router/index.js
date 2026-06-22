@@ -1,32 +1,48 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth.js'
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/',         redirect: '/login' },
-    { path: '/login',    component: () => import('@/views/auth/LoginView.vue') },
-    { path: '/register', component: () => import('@/views/auth/RegisterView.vue') },
-    { path: '/reset',    component: () => import('@/views/auth/ResetView.vue') },
-    { path: '/spaces',   component: () => import('@/views/SpacesView.vue') },
+    { path: '/', redirect: '/spaces' },
+    { path: '/login',    component: () => import('@/views/auth/LoginView.vue'), meta: { public: true } },
+    { path: '/register', component: () => import('@/views/auth/RegisterView.vue'), meta: { public: true } },
+    { path: '/reset',    component: () => import('@/views/auth/ResetView.vue'), meta: { public: true } },
     {
-      path: '/app',
+      path: '/spaces',
+      component: () => import('@/views/SpacesView.vue'),
+    },
+    {
+      path: '/spaces/:slug',
       component: () => import('@/views/AppLayout.vue'),
       children: [
-        { path: 'schema/new',     name: 'sch02', component: () => import('@/views/schema/TemplatePickerView.vue') },
-        { path: 'schema/fields',  name: 'sch03', component: () => import('@/views/schema/FieldEditorView.vue') },
-        { path: 'data/teachers',  name: 'data-prep',    component: () => import('@/views/data/DataTableView.vue'), props: { tableKey: 'data-prep' } },
-        { path: 'data/courses',   name: 'data-courses', component: () => import('@/views/data/DataTableView.vue'), props: { tableKey: 'data-courses' } },
-        { path: 'data/plans',     name: 'data-plans',   component: () => import('@/views/data/DataTableView.vue'), props: { tableKey: 'data-plans' } },
-        { path: 'api/docs',       name: 'api01', component: () => import('@/views/api/ApiDocsView.vue') },
-        { path: 'api/keys',       name: 'api02', component: () => import('@/views/api/ApiKeysView.vue') },
-        { path: 'files',          name: 'files', component: () => import('@/views/files/FilesView.vue') },
-        { path: 'pdf',            name: 'pdf01', component: () => import('@/views/pdf/PdfView.vue') },
-        { path: 'team',           name: 'set01', component: () => import('@/views/settings/TeamView.vue') },
-        { path: 'settings',       name: 'set02', component: () => import('@/views/settings/SettingsView.vue') },
-        { path: '',               redirect: '/app/data/teachers' },
+        { path: '', redirect: to => `/spaces/${to.params.slug}/tables` },
+        { path: 'tables', name: 'tables', component: () => import('@/views/data/DataTableView.vue') },
+        { path: 'tables/:table', name: 'table', component: () => import('@/views/data/DataTableView.vue') },
+        { path: 'schema/new', name: 'schema-new', component: () => import('@/views/schema/TemplatePickerView.vue') },
+        { path: 'schema/:table/fields', name: 'schema-fields', component: () => import('@/views/schema/FieldEditorView.vue') },
+        { path: 'api/docs', name: 'api-docs', component: () => import('@/views/api/ApiDocsView.vue') },
+        { path: 'api/keys', name: 'api-keys', component: () => import('@/views/api/ApiKeysView.vue') },
+        { path: 'files', name: 'files', component: () => import('@/views/files/FilesView.vue') },
+        { path: 'pdf', name: 'pdf', component: () => import('@/views/pdf/PdfView.vue') },
+        { path: 'team', name: 'team', component: () => import('@/views/settings/TeamView.vue') },
+        { path: 'settings', name: 'settings', component: () => import('@/views/settings/SettingsView.vue') },
       ]
     },
+    { path: '/unauthorized', name: 'unauthorized', component: () => import('@/views/UnauthorizedView.vue'), meta: { public: true } },
+    { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('@/views/NotFoundView.vue'), meta: { public: true } },
   ]
+})
+
+router.beforeEach(async (to) => {
+  if (to.meta.public) return true
+  const auth = useAuthStore()
+  if (!auth.accessToken) return { path: '/unauthorized', query: { from: to.fullPath } }
+  if (!auth.user) {
+    try { await auth.fetchMe() } catch {}
+  }
+  if (!auth.user) return { path: '/unauthorized', query: { from: to.fullPath } }
+  return true
 })
 
 export default router

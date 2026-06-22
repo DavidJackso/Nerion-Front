@@ -8,5 +8,21 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
+  },
+  server: {
+    proxy: {
+      '/auth': { target: 'https://nerionapp.ru', changeOrigin: true },
+      '/me': { target: 'https://nerionapp.ru', changeOrigin: true },
+      '/spaces': {
+        target: 'https://nerionapp.ru',
+        changeOrigin: true,
+        bypass(req) {
+          if (req.headers.accept?.includes('text/html')) return '/index.html'
+        },
+      },
+      '/templates': { target: 'https://nerionapp.ru', changeOrigin: true },
+      '/lists': { target: 'https://nerionapp.ru', changeOrigin: true },
+      '/api': { target: 'https://nerionapp.ru', changeOrigin: true },
+    }
   }
 })

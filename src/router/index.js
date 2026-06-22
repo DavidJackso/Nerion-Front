@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/auth.js'
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/', redirect: '/spaces' },
+    { path: '/', component: () => import('@/views/LandingView.vue'), meta: { public: true } },
     { path: '/login',    component: () => import('@/views/auth/LoginView.vue'), meta: { public: true } },
     { path: '/register', component: () => import('@/views/auth/RegisterView.vue'), meta: { public: true } },
     { path: '/reset',    component: () => import('@/views/auth/ResetView.vue'), meta: { public: true } },
@@ -35,7 +35,13 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
-  if (to.meta.public) return true
+  if (to.meta.public) {
+    if (to.path === '/') {
+      const auth = useAuthStore()
+      if (auth.accessToken) return { path: '/spaces' }
+    }
+    return true
+  }
   const auth = useAuthStore()
   if (!auth.accessToken) return { path: '/unauthorized', query: { from: to.fullPath } }
   if (!auth.user) {

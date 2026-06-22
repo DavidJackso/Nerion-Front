@@ -71,7 +71,7 @@ const breadcrumb = computed(() => [space.value?.name || slug.value, 'REST API', 
       <div style="display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 24px">
         <div>
           <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.01em">Ключи API</h1>
-          <p style="font-size: 13px; color: var(--fg-2)">Используй в заголовке <code style="font-size: 12px; font-family: var(--font-mono)">X-Api-Key: …</code></p>
+          <p style="font-size: 13px; color: var(--fg-2)">Используй в заголовке <code style="font-size: 12px; font-family: var(--font-mono)">Authorization: Bearer …</code></p>
         </div>
         <NButton variant="primary" size="md" @click="showCreate = true">
           <NIcon name="plus" :size="14" color="#fff" />

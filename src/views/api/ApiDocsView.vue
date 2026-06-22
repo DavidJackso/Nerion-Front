@@ -66,21 +66,21 @@ const groupedEndpoints = computed(() => {
 const ep = computed(() => picked.value)
 
 const SAMPLES = {
-  curl: (e) => `curl -X ${e.method} 'https://app.nerion.ru${e.path.replace('{id}', '123')}' \\
-  -H 'X-Api-Key: nrn_live_••••••••3f2a' \\
+  curl: (e) => `curl -X ${e.method} 'https://app.nerion.ru${e.path.replace('{id}', 'rec_a8f2b4')}' \\
+  -H 'Authorization: Bearer nrn_live_••••••••3f2a' \\
   -H 'Content-Type: application/json'`,
   js: (e) => `const res = await fetch(
-  'https://app.nerion.ru${e.path.replace('{id}', '123')}',
+  'https://app.nerion.ru${e.path.replace('{id}', 'rec_a8f2b4')}',
   {
     method: '${e.method}',
-    headers: { 'X-Api-Key': process.env.NERION_KEY },
+    headers: { 'Authorization': \`Bearer \${process.env.NERION_KEY}\` },
   }
 );
 const data = await res.json();`,
   py: (e) => `import requests, os
 r = requests.${e.method.toLowerCase()}(
-  'https://app.nerion.ru${e.path.replace('{id}', '123')}',
-  headers={'X-Api-Key': os.environ["NERION_KEY"]},
+  'https://app.nerion.ru${e.path.replace('{id}', 'rec_a8f2b4')}',
+  headers={'Authorization': f'Bearer {os.environ["NERION_KEY"]}'},
 )
 data = r.json()`,
 }
@@ -96,10 +96,10 @@ const RESPONSE_EXAMPLE = computed(() => {
 })
 
 const QUERY_PARAMS = [
-  ['limit',  'integer', 'Записей на странице, до 200. По умолчанию 50.'],
-  ['offset', 'integer', 'Смещение (пагинация).'],
-  ['sort',   'string',  'Slug поля; с минусом — убывание (-created_at).'],
-  ['q',      'string',  'Полнотекстовый поиск по текстовым полям.'],
+  ['page',     'integer', 'Номер страницы, по умолчанию 1.'],
+  ['per_page', 'integer', 'Записей на странице, до 200. По умолчанию 50.'],
+  ['sort',     'string',  'Slug поля; с минусом — убывание (-created_at).'],
+  ['q',        'string',  'Полнотекстовый поиск по текстовым полям.'],
 ]
 
 function copy() {

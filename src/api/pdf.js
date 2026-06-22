@@ -10,7 +10,7 @@ export async function uploadTemplate(spaceSlug, name, file) {
   const fd = new FormData()
   fd.append('name', name)
   fd.append('file', file)
-  const res = await fetch(`${BASE_URL}/spaces/${spaceSlug}/pdf/templates`, {
+  const res = await fetch(`${BASE_URL}/api/v1/spaces/${spaceSlug}/pdf/templates`, {
     method: 'POST',
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: fd,

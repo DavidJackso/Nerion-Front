@@ -23,23 +23,22 @@ const tones = {
       position: 'fixed', top: '72px', right: '24px', zIndex: 300,
       background: 'var(--bg-0)',
       border: `0.5px solid ${tones[tone]?.border || tones.success.border}`,
-      borderLeft: `3px solid ${tones[tone]?.solid || tones.success.solid}`,
-      borderRadius: '8px',
-      boxShadow: 'var(--shadow-2)',
-      padding: '12px 14px',
+      borderRadius: '12px',
+      boxShadow: 'var(--shadow-3)',
+      padding: '14px 16px',
       display: 'flex',
-      gap: '10px',
+      gap: '12px',
       alignItems: 'flex-start',
       minWidth: '280px',
       maxWidth: '380px',
       animation: 'toastIn 200ms',
     }">
       <div :style="{
-        width: '18px', height: '18px', borderRadius: '50%',
-        background: tones[tone]?.solid || tones.success.solid,
+        width: '32px', height: '32px', borderRadius: '8px',
+        background: tones[tone]?.border || tones.success.border,
         display: 'grid', placeItems: 'center', flexShrink: 0,
       }">
-        <NIcon :name="tones[tone]?.icon || 'check'" :size="10" color="#fff" />
+        <NIcon :name="tones[tone]?.icon || 'check'" :size="14" :color="tones[tone]?.solid || tones.success.solid" />
       </div>
       <div style="flex: 1">
         <div style="font-size: 13px; font-weight: 600; color: var(--fg-1)">{{ title }}</div>

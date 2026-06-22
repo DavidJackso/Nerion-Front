@@ -22,6 +22,9 @@ const fields = ref([])
 const loading = ref(false)
 const saveLoading = ref(false)
 const error = ref('')
+const fieldErrors = ref([]) // per-field error messages, indexed by field position
+
+const FIELD_SLUG_RE = /^[a-z][a-z0-9_-]{1,63}$/
 
 const FIELD_TYPES = {
   text: 'Текст',
@@ -66,7 +69,13 @@ onMounted(async () => {
 })
 
 function slugify(s) {
-  return s.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '').slice(0, 50)
+  let slug = s.toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-_]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^[^a-z]+/, '')
+    .slice(0, 50)
+  return slug
 }
 
 function addField() {
@@ -84,6 +93,7 @@ function onNameInput(i, v) {
   if (!fields.value[i]._slugEdited) {
     fields.value[i].slug = slugify(v)
   }
+  fieldErrors.value[i] = null
 }
 
 function onTypeChange(i, v) {
@@ -95,6 +105,23 @@ function onTypeChange(i, v) {
 
 async function save() {
   error.value = ''
+  fieldErrors.value = []
+
+  // Client-side validation
+  const errs = fields.value.map(f => {
+    if (!f.name.trim()) return 'Введите имя поля'
+    const slug = f.slug || slugify(f.name)
+    if (!slug) return 'Не удалось создать slug из имени'
+    if (!FIELD_SLUG_RE.test(slug)) return 'Slug: строчные лат. буквы, цифры, "-" или "_", начало — буква (2–64 символа)'
+    return null
+  })
+
+  if (errs.some(Boolean)) {
+    fieldErrors.value = errs
+    error.value = 'Исправь ошибки в полях выше'
+    return
+  }
+
   saveLoading.value = true
   try {
     const payload = fields.value.map(f => ({
@@ -109,7 +136,12 @@ async function save() {
     await schemaStore.updateFields(spaceSlug.value, tableSlug.value, payload)
     router.push({ name: 'table', params: { slug: spaceSlug.value, table: tableSlug.value } })
   } catch (e) {
-    error.value = e.message
+    if (e.fields) {
+      // Server returned field-level errors — format them for display
+      error.value = Object.entries(e.fields).map(([k, v]) => `${k}: ${v}`).join('\n')
+    } else {
+      error.value = e.message
+    }
   } finally {
     saveLoading.value = false
   }
@@ -145,8 +177,8 @@ const breadcrumb = computed(() => [
             v-for="(f, i) in fields" :key="i"
             :style="{
               padding: '8px 12px',
-              background: f.type === 'relation' ? 'var(--brand-tint)' : f.type === 'file' ? 'var(--bg-1)' : 'var(--bg-0)',
-              border: `0.5px solid ${f.type === 'relation' ? 'var(--purple-200)' : f.type === 'file' ? 'var(--border-strong)' : 'var(--border-default)'}`,
+              background: fieldErrors[i] ? 'var(--red-50, #fef2f2)' : f.type === 'relation' ? 'var(--brand-tint)' : f.type === 'file' ? 'var(--bg-1)' : 'var(--bg-0)',
+              border: `0.5px solid ${fieldErrors[i] ? 'var(--red-400, #f87171)' : f.type === 'relation' ? 'var(--purple-200)' : f.type === 'file' ? 'var(--border-strong)' : 'var(--border-default)'}`,
               borderRadius: '6px',
             }"
           >
@@ -165,7 +197,7 @@ const breadcrumb = computed(() => [
               />
               <input
                 :value="f.slug"
-                @input="fields[i].slug = $event.target.value; fields[i]._slugEdited = true"
+                @input="fields[i].slug = $event.target.value; fields[i]._slugEdited = true; fieldErrors[i] = null"
                 placeholder="slug"
                 :style="{
                   height: '30px', padding: '0 10px', borderRadius: '6px',
@@ -187,6 +219,11 @@ const breadcrumb = computed(() => [
               <button @click="del(i)" style="background: 0; border: 0; cursor: pointer; color: var(--fg-3); padding: 2px; display: flex">
                 <NIcon name="x" :size="14" />
               </button>
+            </div>
+
+            <!-- Per-field error -->
+            <div v-if="fieldErrors[i]" style="margin-top: 6px; margin-left: 28px; font-size: 12px; color: var(--red-600, #dc2626)">
+              {{ fieldErrors[i] }}
             </div>
 
             <!-- Enum values config -->
@@ -231,7 +268,7 @@ const breadcrumb = computed(() => [
           </button>
         </div>
 
-        <p v-if="error" style="color: var(--red-600, #dc2626); font-size: 13px; margin-top: 12px">{{ error }}</p>
+        <pre v-if="error" style="color: var(--red-600, #dc2626); font-size: 13px; margin-top: 12px; white-space: pre-wrap; font-family: inherit; margin-bottom: 0">{{ error }}</pre>
 
         <div style="margin-top: 32px; display: flex; justify-content: space-between">
           <NButton variant="ghost" size="md" @click="router.push({ name: 'schema-new', params: { slug: spaceSlug } })">← Назад</NButton>

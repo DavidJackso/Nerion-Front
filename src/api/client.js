@@ -1,9 +1,11 @@
 const BASE_URL = import.meta.env.VITE_API_URL || ''
+const API_BASE = BASE_URL + '/api/v1'
 
 class ApiError extends Error {
-  constructor(code, message) {
+  constructor(code, message, fields = null) {
     super(message)
     this.code = code
+    this.fields = fields
   }
 }
 
@@ -14,7 +16,7 @@ async function request(method, path, body, retried = false) {
   const headers = { 'Content-Type': 'application/json' }
   if (token) headers['Authorization'] = `Bearer ${token}`
 
-  const res = await fetch(BASE_URL + path, {
+  const res = await fetch(API_BASE + path, {
     method,
     headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
@@ -25,7 +27,7 @@ async function request(method, path, body, retried = false) {
       _refreshing = (async () => {
         const rt = localStorage.getItem('nerion_refresh_token')
         if (!rt) throw new ApiError('unauthorized', 'Требуется авторизация')
-        const r = await fetch(BASE_URL + '/auth/refresh', {
+        const r = await fetch(API_BASE + '/auth/refresh', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ refresh_token: rt }),
@@ -58,7 +60,7 @@ async function request(method, path, body, retried = false) {
 
   if (!res.ok) {
     const err = data?.error || {}
-    throw new ApiError(err.code || 'error', err.message || 'Ошибка сервера')
+    throw new ApiError(err.code || 'error', err.message || 'Ошибка сервера', err.fields || null)
   }
 
   return data

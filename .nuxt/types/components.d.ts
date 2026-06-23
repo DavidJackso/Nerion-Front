@@ -18,6 +18,7 @@ interface _GlobalComponents {
   CommandPalette: typeof import("../../components/CommandPalette.vue")['default']
   NBadge: typeof import("../../components/NBadge.vue")['default']
   NButton: typeof import("../../components/NButton.vue")['default']
+  NFileInput: typeof import("../../components/NFileInput.vue")['default']
   NIcon: typeof import("../../components/NIcon.vue")['default']
   NInput: typeof import("../../components/NInput.vue")['default']
   NMethod: typeof import("../../components/NMethod.vue")['default']
@@ -54,6 +55,7 @@ interface _GlobalComponents {
   LazyCommandPalette: LazyComponent<typeof import("../../components/CommandPalette.vue")['default']>
   LazyNBadge: LazyComponent<typeof import("../../components/NBadge.vue")['default']>
   LazyNButton: LazyComponent<typeof import("../../components/NButton.vue")['default']>
+  LazyNFileInput: LazyComponent<typeof import("../../components/NFileInput.vue")['default']>
   LazyNIcon: LazyComponent<typeof import("../../components/NIcon.vue")['default']>
   LazyNInput: LazyComponent<typeof import("../../components/NInput.vue")['default']>
   LazyNMethod: LazyComponent<typeof import("../../components/NMethod.vue")['default']>

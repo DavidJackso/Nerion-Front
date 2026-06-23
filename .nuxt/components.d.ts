@@ -18,6 +18,7 @@ export const AppSidebar: typeof import("../components/AppSidebar.vue")['default'
 export const CommandPalette: typeof import("../components/CommandPalette.vue")['default']
 export const NBadge: typeof import("../components/NBadge.vue")['default']
 export const NButton: typeof import("../components/NButton.vue")['default']
+export const NFileInput: typeof import("../components/NFileInput.vue")['default']
 export const NIcon: typeof import("../components/NIcon.vue")['default']
 export const NInput: typeof import("../components/NInput.vue")['default']
 export const NMethod: typeof import("../components/NMethod.vue")['default']
@@ -54,6 +55,7 @@ export const LazyAppSidebar: LazyComponent<typeof import("../components/AppSideb
 export const LazyCommandPalette: LazyComponent<typeof import("../components/CommandPalette.vue")['default']>
 export const LazyNBadge: LazyComponent<typeof import("../components/NBadge.vue")['default']>
 export const LazyNButton: LazyComponent<typeof import("../components/NButton.vue")['default']>
+export const LazyNFileInput: LazyComponent<typeof import("../components/NFileInput.vue")['default']>
 export const LazyNIcon: LazyComponent<typeof import("../components/NIcon.vue")['default']>
 export const LazyNInput: LazyComponent<typeof import("../components/NInput.vue")['default']>
 export const LazyNMethod: LazyComponent<typeof import("../components/NMethod.vue")['default']>

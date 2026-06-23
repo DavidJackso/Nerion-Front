@@ -66,6 +66,7 @@ declare global {
   const listKeys: typeof import('../../api/apikeys').listKeys
   const listLists: typeof import('../../api/lists').listLists
   const listMembers: typeof import('../../api/members').listMembers
+  const listPdfTemplates: typeof import('../../api/pdf').listPdfTemplates
   const listRecords: typeof import('../../api/records').listRecords
   const listSpaces: typeof import('../../api/spaces').listSpaces
   const listTables: typeof import('../../api/schema').listTables
@@ -99,6 +100,7 @@ declare global {
   const preloadPayload: typeof import('../../node_modules/nuxt/dist/app/composables/payload').preloadPayload
   const preloadRouteComponents: typeof import('../../node_modules/nuxt/dist/app/composables/preload').preloadRouteComponents
   const prerenderRoutes: typeof import('../../node_modules/nuxt/dist/app/composables/ssr').prerenderRoutes
+  const presignFile: typeof import('../../api/files').presignFile
   const provide: typeof import('../../node_modules/vue').provide
   const proxyRefs: typeof import('../../node_modules/vue').proxyRefs
   const reactive: typeof import('../../node_modules/vue').reactive
@@ -135,6 +137,7 @@ declare global {
   const updateFields: typeof import('../../api/schema').updateFields
   const updateList: typeof import('../../api/lists').updateList
   const updateRecord: typeof import('../../api/records').updateRecord
+  const uploadFile: typeof import('../../api/files').uploadFile
   const uploadTemplate: typeof import('../../api/pdf').uploadTemplate
   const useAppConfig: typeof import('../../node_modules/nuxt/dist/app/config').useAppConfig
   const useAsyncData: typeof import('../../node_modules/nuxt/dist/app/composables/asyncData').useAsyncData
@@ -156,7 +159,6 @@ declare global {
   const useModel: typeof import('../../node_modules/vue').useModel
   const useNuxtApp: typeof import('../../node_modules/nuxt/dist/app/nuxt').useNuxtApp
   const useNuxtData: typeof import('../../node_modules/nuxt/dist/app/composables/asyncData').useNuxtData
-  const useNuxtDevTools: typeof import('../../node_modules/nuxt/node_modules/@nuxt/devtools/dist/runtime/use-nuxt-devtools').useNuxtDevTools
   const usePinia: typeof import('../../node_modules/@pinia/nuxt/dist/runtime/composables').usePinia
   const usePreviewMode: typeof import('../../node_modules/nuxt/dist/app/composables/preview').usePreviewMode
   const useRecordsStore: typeof import('../../stores/records').useRecordsStore
@@ -253,6 +255,9 @@ declare global {
   export type { AuthTokens, User } from '../../api/auth'
   import('../../api/auth')
   // @ts-ignore
+  export type { FileUploadResult } from '../../api/files'
+  import('../../api/files')
+  // @ts-ignore
   export type { SpaceList, CreateListPayload, UpdateListPayload } from '../../api/lists'
   import('../../api/lists')
   // @ts-ignore
@@ -340,6 +345,7 @@ declare module 'vue' {
     readonly listKeys: UnwrapRef<typeof import('../../api/apikeys')['listKeys']>
     readonly listLists: UnwrapRef<typeof import('../../api/lists')['listLists']>
     readonly listMembers: UnwrapRef<typeof import('../../api/members')['listMembers']>
+    readonly listPdfTemplates: UnwrapRef<typeof import('../../api/pdf')['listPdfTemplates']>
     readonly listRecords: UnwrapRef<typeof import('../../api/records')['listRecords']>
     readonly listSpaces: UnwrapRef<typeof import('../../api/spaces')['listSpaces']>
     readonly listTables: UnwrapRef<typeof import('../../api/schema')['listTables']>
@@ -373,6 +379,7 @@ declare module 'vue' {
     readonly preloadPayload: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/payload')['preloadPayload']>
     readonly preloadRouteComponents: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/preload')['preloadRouteComponents']>
     readonly prerenderRoutes: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/ssr')['prerenderRoutes']>
+    readonly presignFile: UnwrapRef<typeof import('../../api/files')['presignFile']>
     readonly provide: UnwrapRef<typeof import('../../node_modules/vue')['provide']>
     readonly proxyRefs: UnwrapRef<typeof import('../../node_modules/vue')['proxyRefs']>
     readonly reactive: UnwrapRef<typeof import('../../node_modules/vue')['reactive']>
@@ -409,6 +416,7 @@ declare module 'vue' {
     readonly updateFields: UnwrapRef<typeof import('../../api/schema')['updateFields']>
     readonly updateList: UnwrapRef<typeof import('../../api/lists')['updateList']>
     readonly updateRecord: UnwrapRef<typeof import('../../api/records')['updateRecord']>
+    readonly uploadFile: UnwrapRef<typeof import('../../api/files')['uploadFile']>
     readonly uploadTemplate: UnwrapRef<typeof import('../../api/pdf')['uploadTemplate']>
     readonly useAppConfig: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/config')['useAppConfig']>
     readonly useAsyncData: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/asyncData')['useAsyncData']>
@@ -430,7 +438,6 @@ declare module 'vue' {
     readonly useModel: UnwrapRef<typeof import('../../node_modules/vue')['useModel']>
     readonly useNuxtApp: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/nuxt')['useNuxtApp']>
     readonly useNuxtData: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/asyncData')['useNuxtData']>
-    readonly useNuxtDevTools: UnwrapRef<typeof import('../../node_modules/nuxt/node_modules/@nuxt/devtools/dist/runtime/use-nuxt-devtools')['useNuxtDevTools']>
     readonly usePinia: UnwrapRef<typeof import('../../node_modules/@pinia/nuxt/dist/runtime/composables')['usePinia']>
     readonly usePreviewMode: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/preview')['usePreviewMode']>
     readonly useRecordsStore: UnwrapRef<typeof import('../../stores/records')['useRecordsStore']>

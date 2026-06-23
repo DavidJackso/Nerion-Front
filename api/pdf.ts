@@ -43,7 +43,7 @@ function getApiBaseUrl(): string {
   )
 }
 
-export const listTemplates = (spaceSlug: string): Promise<PdfTemplate[]> =>
+export const listPdfTemplates = (spaceSlug: string): Promise<PdfTemplate[]> =>
   apiClient.get(`/spaces/${spaceSlug}/pdf/templates`)
 
 export async function uploadTemplate(

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { listTemplates, uploadTemplate, saveMapping, generatePDF, getJob, listArchive } from '~/api/pdf'
+import { listPdfTemplates as listTemplates, uploadTemplate, saveMapping, generatePDF, getJob, listArchive } from '~/api/pdf'
 import { useSchemaStore } from '~/stores/schema'
 import { useSpacesStore } from '~/stores/spaces'
 

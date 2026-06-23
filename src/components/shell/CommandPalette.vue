@@ -1,32 +1,23 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import NIcon from '@/components/primitives/NIcon.vue'
 
 const emit = defineEmits(['close'])
 const router = useRouter()
+const route = useRoute()
 const q = ref('')
 
 const ALL = [
-  { id: 'data-prep',    icon: 'table',    label: 'Преподаватели',          hint: '14 записей',               group: 'Таблицы' },
-  { id: 'data-courses', icon: 'table',    label: 'Курсы',                  hint: '42 записи',                group: 'Таблицы' },
-  { id: 'data-plans',   icon: 'table',    label: 'Учебные планы',          hint: '8 записей',                group: 'Таблицы' },
-  { id: 'sch02',        icon: 'plus',     label: 'Создать таблицу',        hint: 'Из шаблона или с нуля',   group: 'Действия' },
-  { id: 'api01',        icon: 'code',     label: 'REST API',               hint: 'Документация эндпоинтов', group: 'Выходы' },
-  { id: 'api02',        icon: 'key',      label: 'Ключи API',              hint: 'Создать или отозвать',    group: 'Выходы' },
-  { id: 'files',        icon: 'folder',   label: 'Файлы и списки',         hint: 'Списки для фронта · API', group: 'Выходы' },
-  { id: 'pdf01',        icon: 'file',     label: 'PDF',                    hint: 'Шаблоны и генерация',     group: 'Выходы' },
-  { id: 'set01',        icon: 'users',    label: 'Команда',                hint: 'Участники и роли',        group: 'Настройки' },
-  { id: 'set02',        icon: 'settings', label: 'Настройки пространства', hint: 'Имя, slug, удаление',     group: 'Настройки' },
-  { id: 'spaces',       icon: 'box',      label: 'Все пространства',       hint: 'Сменить пространство',    group: 'Навигация' },
+  { id: 'sch02',  icon: 'plus',     label: 'Создать таблицу',        hint: 'Из шаблона или с нуля',   group: 'Действия' },
+  { id: 'api01',  icon: 'code',     label: 'REST API',               hint: 'Документация эндпоинтов', group: 'Выходы' },
+  { id: 'api02',  icon: 'key',      label: 'Ключи API',              hint: 'Создать или отозвать',    group: 'Выходы' },
+  { id: 'files',  icon: 'folder',   label: 'Файлы и списки',         hint: 'Списки для фронта · API', group: 'Выходы' },
+  { id: 'pdf01',  icon: 'file',     label: 'PDF',                    hint: 'Шаблоны и генерация',     group: 'Выходы' },
+  { id: 'set01',  icon: 'users',    label: 'Команда',                hint: 'Участники и роли',        group: 'Настройки' },
+  { id: 'set02',  icon: 'settings', label: 'Настройки пространства', hint: 'Имя, slug, удаление',     group: 'Настройки' },
+  { id: 'spaces', icon: 'box',      label: 'Все пространства',       hint: 'Сменить пространство',    group: 'Навигация' },
 ]
-
-const ROUTE_MAP = {
-  'spaces': '/spaces', 'data-prep': { name: 'data-prep' }, 'data-courses': { name: 'data-courses' },
-  'data-plans': { name: 'data-plans' }, 'sch02': { name: 'sch02' }, 'sch03': { name: 'sch03' },
-  'api01': { name: 'api01' }, 'api02': { name: 'api02' }, 'files': { name: 'files' },
-  'pdf01': { name: 'pdf01' }, 'set01': { name: 'set01' }, 'set02': { name: 'set02' },
-}
 
 const filtered = computed(() => {
   const qv = q.value.trim().toLowerCase()
@@ -42,8 +33,19 @@ const groups = computed(() => {
 })
 
 function go(id) {
-  const t = ROUTE_MAP[id]
-  if (t) typeof t === 'string' ? router.push(t) : router.push(t)
+  const s = route.params.slug
+  const paths = {
+    'spaces': '/spaces',
+    'api01':  `/spaces/${s}/api/docs`,
+    'api02':  `/spaces/${s}/api/keys`,
+    'files':  `/spaces/${s}/files`,
+    'pdf01':  `/spaces/${s}/pdf`,
+    'set01':  `/spaces/${s}/team`,
+    'set02':  `/spaces/${s}/settings`,
+    'sch02':  `/spaces/${s}/schema/new`,
+  }
+  const path = paths[id]
+  if (path) router.push(path)
   emit('close')
 }
 </script>

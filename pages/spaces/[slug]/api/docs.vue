@@ -172,7 +172,7 @@ const breadcrumb = computed(() => [space.value?.name || slug.value, 'REST API'])
             @click="picked = e"
             :style="{
               width: '100%', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '10px',
-              background: picked === e ? 'var(--brand-tint)' : 'transparent',
+              background: picked === e ? 'var(--brand-tint-strong)' : 'transparent',
               border: 0,
               borderLeft: `3px solid ${picked === e ? 'var(--brand-primary)' : 'transparent'}`,
               cursor: 'pointer', textAlign: 'left',
@@ -225,7 +225,7 @@ const breadcrumb = computed(() => [space.value?.name || slug.value, 'REST API'])
                 alignItems: 'start',
               }"
             >
-              <code style="font-size: 12px; font-family: var(--font-mono); color: var(--fg-1)">{{ k }}</code>
+              <code style="font-size: 12px; font-family: var(--font-mono); color: var(--fg-1); justify-self: start">{{ k }}</code>
               <span style="font-size: 12px; color: var(--fg-3)">{{ t }}</span>
               <span style="font-size: 13px; color: var(--fg-2)">{{ d }}</span>
             </div>

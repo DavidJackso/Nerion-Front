@@ -92,57 +92,116 @@ function removeOne(key: string) {
 
 <template>
   <div>
-    <input ref="fileInput" type="file" style="display:none" @change="onFileChange" />
+    <input
+      ref="fileInput"
+      type="file"
+      style="display:none"
+      :multiple="multiple"
+      @change="onFileChange"
+    />
 
-    <!-- Done: file info row -->
-    <div
-      v-if="modelValue && !uploading"
-      style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:0.5px solid var(--border-default);border-radius:8px;background:var(--bg-0)"
-    >
-      <NIcon name="file" :size="15" color="var(--fg-2)" />
-      <span style="flex:1;font-size:13px;font-family:var(--font-mono);color:var(--fg-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-        {{ filename(modelValue) }}
-      </span>
-      <span v-if="uploadedSize" style="font-size:11px;color:var(--fg-3);white-space:nowrap;flex-shrink:0">
-        {{ fmtSize(uploadedSize) }}
-      </span>
-      <button
-        type="button"
-        @click="remove"
-        style="background:0;border:0;padding:4px;cursor:pointer;color:var(--fg-3);display:flex;border-radius:4px;flex-shrink:0"
+    <!-- Multiple mode -->
+    <template v-if="multiple">
+      <div
+        v-for="key in multipleValues"
+        :key="key"
+        style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:0.5px solid var(--border-default);border-radius:8px;background:var(--bg-0);margin-bottom:4px"
       >
-        <NIcon name="x" :size="14" />
-      </button>
-    </div>
+        <NIcon name="file" :size="15" color="var(--fg-2)" />
+        <span style="flex:1;font-size:13px;font-family:var(--font-mono);color:var(--fg-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          {{ filename(key) }}
+        </span>
+        <span v-if="sizeMap[key]" style="font-size:11px;color:var(--fg-3);white-space:nowrap;flex-shrink:0">
+          {{ fmtSize(sizeMap[key]) }}
+        </span>
+        <button
+          type="button"
+          @click="removeOne(key)"
+          style="background:0;border:0;padding:4px;cursor:pointer;color:var(--fg-3);display:flex;border-radius:4px;flex-shrink:0"
+        >
+          <NIcon name="x" :size="14" />
+        </button>
+      </div>
 
-    <!-- Idle / uploading -->
-    <div
-      v-else
-      @click="!uploading && fileInput?.click()"
-      :style="{
-        border: `1px dashed ${error ? 'var(--red-400,#f87171)' : 'var(--border-strong)'}`,
-        borderRadius: '8px',
-        padding: '12px 14px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '8px',
-        background: 'var(--bg-1)',
-        cursor: uploading ? 'default' : 'pointer',
-        fontSize: '13px',
-        color: 'var(--fg-2)',
-      }"
-    >
-      <span
-        v-if="uploading"
-        style="width:15px;height:15px;border:2px solid var(--border-strong);border-top-color:var(--brand-primary);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0"
-      />
-      <NIcon v-else name="upload" :size="15" color="var(--fg-3)" />
-      <span v-if="uploading">Загрузка…</span>
-      <span v-else>
-        Перетащи или <span style="color:var(--brand-primary);font-weight:500">выбери</span>
-      </span>
-    </div>
+      <div
+        @click="!uploadingCount && fileInput?.click()"
+        :style="{
+          border: `1px dashed ${error ? 'var(--red-400,#f87171)' : 'var(--border-strong)'}`,
+          borderRadius: '8px',
+          padding: '12px 14px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+          background: 'var(--bg-1)',
+          cursor: uploadingCount ? 'default' : 'pointer',
+          fontSize: '13px',
+          color: 'var(--fg-2)',
+          marginTop: multipleValues.length ? '4px' : '0',
+        }"
+      >
+        <span
+          v-if="uploadingCount"
+          style="width:15px;height:15px;border:2px solid var(--border-strong);border-top-color:var(--brand-primary);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0"
+        />
+        <NIcon v-else name="upload" :size="15" color="var(--fg-3)" />
+        <span v-if="uploadingCount">Загрузка {{ uploadingCount }} {{ pluralFiles(uploadingCount) }}…</span>
+        <span v-else>
+          Перетащи или <span style="color:var(--brand-primary);font-weight:500">выбери</span>
+        </span>
+      </div>
+    </template>
+
+    <!-- Single mode (unchanged) -->
+    <template v-else>
+      <div
+        v-if="modelValue && !uploading"
+        style="display:flex;align-items:center;gap:10px;padding:8px 12px;border:0.5px solid var(--border-default);border-radius:8px;background:var(--bg-0)"
+      >
+        <NIcon name="file" :size="15" color="var(--fg-2)" />
+        <span style="flex:1;font-size:13px;font-family:var(--font-mono);color:var(--fg-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          {{ filename(modelValue as string) }}
+        </span>
+        <span v-if="uploadedSize" style="font-size:11px;color:var(--fg-3);white-space:nowrap;flex-shrink:0">
+          {{ fmtSize(uploadedSize) }}
+        </span>
+        <button
+          type="button"
+          @click="remove"
+          style="background:0;border:0;padding:4px;cursor:pointer;color:var(--fg-3);display:flex;border-radius:4px;flex-shrink:0"
+        >
+          <NIcon name="x" :size="14" />
+        </button>
+      </div>
+
+      <div
+        v-else
+        @click="!uploading && fileInput?.click()"
+        :style="{
+          border: `1px dashed ${error ? 'var(--red-400,#f87171)' : 'var(--border-strong)'}`,
+          borderRadius: '8px',
+          padding: '12px 14px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+          background: 'var(--bg-1)',
+          cursor: uploading ? 'default' : 'pointer',
+          fontSize: '13px',
+          color: 'var(--fg-2)',
+        }"
+      >
+        <span
+          v-if="uploading"
+          style="width:15px;height:15px;border:2px solid var(--border-strong);border-top-color:var(--brand-primary);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0"
+        />
+        <NIcon v-else name="upload" :size="15" color="var(--fg-3)" />
+        <span v-if="uploading">Загрузка…</span>
+        <span v-else>
+          Перетащи или <span style="color:var(--brand-primary);font-weight:500">выбери</span>
+        </span>
+      </div>
+    </template>
 
     <p v-if="error" style="font-size:12px;color:var(--red-600,#dc2626);margin:4px 0 0">{{ error }}</p>
   </div>

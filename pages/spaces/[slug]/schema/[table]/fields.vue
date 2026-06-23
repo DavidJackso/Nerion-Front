@@ -60,6 +60,7 @@ const fieldTypeOptions = computed(() =>
 onMounted(async () => {
   loading.value = true
   try {
+    await schemaStore.fetchTables(spaceSlug.value)
     const t = await schemaStore.fetchTable(spaceSlug.value, tableSlug.value)
     fields.value = (t.fields || []).map((f: any): FieldConfig => ({
       id: f.id,
@@ -144,6 +145,20 @@ function setRelationCardinality(i: number, v: 'one' | 'many') {
     fields.value[i].relation!.cardinality = v
   }
 }
+
+function setRelationTarget(i: number, v: string) {
+  if (!fields.value[i].relation) {
+    fields.value[i].relation = { cardinality: 'one', targetTable: v }
+  } else {
+    fields.value[i].relation!.targetTable = v
+  }
+}
+
+const otherTables = computed(() =>
+  schemaStore.tables
+    .filter((t) => t.slug !== tableSlug.value)
+    .map((t) => ({ value: t.slug, label: t.name }))
+)
 
 async function save() {
   error.value = ''
@@ -295,7 +310,15 @@ async function save() {
             v-if="f.type === 'relation'"
             style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; row-gap: 8px; margin-top: 8px; margin-left: 28px; padding: 8px 10px; background: var(--bg-0); border: 0.5px solid var(--purple-200); border-radius: 6px"
           >
-            <span style="font-size: 12px; color: var(--purple-700); font-weight: 500; white-space: nowrap">↔ Кардинальность</span>
+            <span style="font-size: 12px; color: var(--purple-700); font-weight: 500; white-space: nowrap">↔ Ссылается на</span>
+            <NSelect
+              :model-value="f.relation?.targetTable || ''"
+              @update:model-value="setRelationTarget(i, $event)"
+              size="sm"
+              :options="otherTables"
+              placeholder="Выбери таблицу"
+              style="min-width: 160px"
+            />
             <div style="display: flex; gap: 2px; padding: 2px; background: var(--bg-2); border-radius: 6px">
               <button
                 v-for="[v, l] in ([['one', 'одно значение'], ['many', 'список']] as [string, string][])"

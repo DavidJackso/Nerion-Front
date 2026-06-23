@@ -4,6 +4,7 @@ import { useRecordsStore } from '~/stores/records'
 import { useSpacesStore } from '~/stores/spaces'
 import { useSpaceSlug } from '~/composables/useSpaceSlug'
 import { useToast } from '~/composables/useToast'
+import { presignFile } from '~/api/files'
 
 definePageMeta({ layout: 'app', middleware: [] })
 
@@ -188,6 +189,42 @@ async function createRecord() {
   }
 }
 
+// ── Edit record modal ─────────────────────────────────────────────────────────
+
+const editRecordId = ref<number | null>(null)
+const editVals = ref<Record<string, any>>({})
+const editError = ref('')
+const editLoading = ref(false)
+
+function openEdit(rec: any) {
+  editRecordId.value = rec.id
+  const vals: Record<string, any> = {}
+  fields.value.forEach((f: any) => { vals[f.slug] = rec[f.slug] ?? null })
+  editVals.value = vals
+  editError.value = ''
+}
+
+async function saveEdit() {
+  if (!editRecordId.value) return
+  editLoading.value = true
+  editError.value = ''
+  try {
+    await recordsStore.updateRecord(spaceSlug.value, tableSlug.value, editRecordId.value, editVals.value)
+    editRecordId.value = null
+    showToast({ title: 'Изменения сохранены', tone: 'success' })
+  } catch (e: any) {
+    editError.value = e.message
+  } finally {
+    editLoading.value = false
+  }
+}
+
+function closeEdit() {
+  editRecordId.value = null
+  editVals.value = {}
+  editError.value = ''
+}
+
 // ── Cell helpers ──────────────────────────────────────────────────────────────
 
 function cellValue(rec: any, field: any) {
@@ -211,6 +248,20 @@ const MONO_HUES = [
   'var(--blue-500)',
   'var(--purple-600)',
 ]
+
+function fileKeyName(key: string): string {
+  const last = key.split('/').pop() ?? key
+  return last.replace(/^\d+_/, '')
+}
+
+async function openFileCell(key: string) {
+  try {
+    const { url } = await presignFile(spaceSlug.value, key)
+    window.open(url, '_blank')
+  } catch {
+    showToast({ title: 'Не удалось получить ссылку', tone: 'error' })
+  }
+}
 
 function monogram(name: any) {
   const s = String(name || '')
@@ -444,6 +495,23 @@ onUnmounted(() => {
                   <span style="color: var(--brand-primary); font-size: 12px">{{ cellValue(rec, f) }}</span>
                 </template>
 
+                <!-- File: chip with name + open link -->
+                <template v-else-if="f.type === 'file'">
+                  <button
+                    v-if="cellValue(rec, f)"
+                    @click.stop="openFileCell(String(cellValue(rec, f)))"
+                    class="filecell"
+                    style="display:inline-flex;align-items:center;gap:6px;background:0;border:0;cursor:pointer;padding:2px 6px;margin:-2px -6px;border-radius:6px;font-family:inherit"
+                  >
+                    <NIcon name="file" :size="13" color="var(--fg-3)" />
+                    <span style="font-size:12px;font-family:var(--font-mono);color:var(--fg-2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                      {{ fileKeyName(String(cellValue(rec, f))) }}
+                    </span>
+                    <NIcon name="extlink" :size="10" color="var(--fg-3)" />
+                  </button>
+                  <span v-else style="color:var(--fg-3)">—</span>
+                </template>
+
                 <!-- Default -->
                 <template v-else>
                   <span>{{ cellValue(rec, f) }}</span>
@@ -457,7 +525,7 @@ onUnmounted(() => {
                   style="display: flex; gap: 2px; opacity: 0; transition: opacity 100ms"
                 >
                   <button
-                    @click="showToast({ title: 'Редактирование в разработке', tone: 'neutral' })"
+                    @click.stop="openEdit(rec)"
                     style="background: 0; border: 0; padding: 5px; cursor: pointer; color: var(--fg-2); border-radius: 4px"
                   >
                     <NIcon name="pencil" :size="13" />
@@ -617,16 +685,13 @@ onUnmounted(() => {
             />
           </template>
 
-          <!-- File upload placeholder -->
+          <!-- File upload -->
           <template v-else-if="f.type === 'file'">
-            <div
-              style="border: 1px dashed var(--border-strong); border-radius: 8px; padding: 18px 14px; display: flex; flex-direction: column; align-items: center; gap: 7px; background: var(--bg-1); text-align: center; cursor: pointer"
-            >
-              <NIcon name="upload" :size="16" color="var(--fg-3)" />
-              <div style="font-size: 13px; color: var(--fg-2)">
-                Перетащи файлы или <span style="color: var(--brand-primary); font-weight: 500">выбери</span>
-              </div>
-            </div>
+            <NFileInput
+              :space-slug="spaceSlug"
+              :model-value="createVals[f.slug] || null"
+              @update:model-value="createVals[f.slug] = $event"
+            />
           </template>
 
           <!-- Long text textarea -->
@@ -668,6 +733,93 @@ onUnmounted(() => {
           @click="showCreate = false; createVals = {}; createError = ''"
         >Отмена</NButton>
         <NButton variant="primary" size="md" @click="createRecord">Добавить запись</NButton>
+      </template>
+    </NModal>
+
+    <!-- Edit record modal -->
+    <NModal
+      :open="editRecordId !== null"
+      @close="closeEdit"
+      :title="`Изменить запись — ${(table as any)?.name || ''}`"
+      subtitle="Редактируй поля записи."
+      :width="520"
+    >
+      <div style="display: flex; flex-direction: column; gap: 14px">
+        <div v-for="f in fields" :key="f.slug">
+          <label
+            style="font-size: 12px; color: var(--fg-2); font-weight: 500; display: block; margin-bottom: 6px"
+          >
+            {{ f.name }}<span v-if="f.required" style="color: var(--red-500); margin-left: 2px">*</span>
+          </label>
+
+          <template v-if="f.type === 'boolean'">
+            <div style="display: flex; align-items: center; gap: 8px">
+              <NToggle
+                :model-value="editVals[f.slug] ?? false"
+                @update:model-value="editVals[f.slug] = $event"
+              />
+              <span style="font-size: 13px; color: var(--fg-2)">{{ editVals[f.slug] ? 'да' : 'нет' }}</span>
+            </div>
+          </template>
+
+          <template v-else-if="f.type === 'enum' && f.enum_values?.length">
+            <NSelect
+              :model-value="editVals[f.slug] || ''"
+              @update:model-value="editVals[f.slug] = $event"
+              placeholder="Выбери значение…"
+              :options="f.enum_values.map((v: string) => ({ value: v, label: v }))"
+            />
+          </template>
+
+          <template v-else-if="f.type === 'file'">
+            <NFileInput
+              :space-slug="spaceSlug"
+              :model-value="editVals[f.slug] || null"
+              @update:model-value="editVals[f.slug] = $event"
+            />
+          </template>
+
+          <template v-else-if="f.type === 'longtext'">
+            <textarea
+              :value="editVals[f.slug] || ''"
+              @input="editVals[f.slug] = ($event.target as HTMLTextAreaElement).value"
+              :placeholder="`Введи ${f.name.toLowerCase()}…`"
+              style="width: 100%; min-height: 80px; border-radius: 6px; border: 0.5px solid var(--border-strong); padding: 8px 12px; font-size: 14px; background: var(--bg-0); color: var(--fg-1); outline: 0; font-family: inherit; resize: vertical; box-sizing: border-box"
+            />
+          </template>
+
+          <template v-else>
+            <NInput
+              :model-value="editVals[f.slug] || ''"
+              @update:model-value="editVals[f.slug] = $event"
+              :type="
+                f.type === 'number' ? 'number'
+                : f.type === 'email' ? 'email'
+                : f.type === 'date' ? 'date'
+                : f.type === 'datetime' ? 'datetime-local'
+                : f.type === 'url' ? 'url'
+                : f.type === 'phone' ? 'tel'
+                : 'text'
+              "
+              :placeholder="`Введи ${f.name.toLowerCase()}…`"
+            />
+          </template>
+        </div>
+        <p v-if="editError" style="color: var(--red-600, #dc2626); font-size: 13px; margin: 0">
+          {{ editError }}
+        </p>
+      </div>
+      <template #footer>
+        <button
+          @click="() => { deleteRecordId = editRecordId; closeEdit() }"
+          style="margin-right:auto;display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;background:transparent;border:0.5px solid var(--border-strong);border-radius:6px;color:var(--red-600);font-size:14px;font-weight:500;font-family:inherit;cursor:pointer"
+        >
+          <NIcon name="trash" :size="14" color="var(--red-600)" />Удалить
+        </button>
+        <NButton variant="ghost" size="md" @click="closeEdit">Отмена</NButton>
+        <NButton variant="primary" size="md" :disabled="editLoading" @click="saveEdit">
+          {{ editLoading ? 'Сохранение…' : 'Сохранить' }}
+        </NButton>
       </template>
     </NModal>
 
@@ -736,4 +888,5 @@ table.dt tbody tr { transition: background 90ms; }
 table.dt tbody tr:hover td { background: var(--bg-1); }
 table.dt th.sortable { cursor: pointer; user-select: none; transition: color 100ms; }
 table.dt th.sortable:hover { color: var(--fg-1); }
+.filecell:hover { background: var(--bg-2) !important; }
 </style>

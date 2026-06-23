@@ -233,6 +233,15 @@ async function fetchRecords() {
   // No table selected on the index page — nothing to load
 }
 
+onMounted(async () => {
+  if (!schemaStore.tables.length) {
+    await schemaStore.fetchTables(spaceSlug.value)
+  }
+  if (schemaStore.tables.length) {
+    navigateTo(`/spaces/${spaceSlug.value}/tables/${schemaStore.tables[0].slug}`, { replace: true })
+  }
+})
+
 onUnmounted(() => {
   if (searchTimer) clearTimeout(searchTimer)
 })

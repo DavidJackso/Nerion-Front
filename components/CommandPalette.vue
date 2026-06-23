@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted } from 'vue'
+import { useSpacesStore } from '~/stores/spaces'
+import { useSchemaStore } from '~/stores/schema'
 
 const emit = defineEmits<{ close: [] }>()
+
+const route = useRoute()
+const spacesStore = useSpacesStore()
+const schemaStore = useSchemaStore()
 
 const q = ref('')
 const activeIndex = ref(0)
@@ -15,25 +21,59 @@ interface PaletteItem {
   to: string
 }
 
-const ALL: PaletteItem[] = [
-  { id: 'data-prep',    icon: 'table',    label: 'Преподаватели',          hint: '14 записей',               group: 'Таблицы',    to: '/spaces' },
-  { id: 'data-courses', icon: 'table',    label: 'Курсы',                  hint: '42 записи',                group: 'Таблицы',    to: '/spaces' },
-  { id: 'data-plans',   icon: 'table',    label: 'Учебные планы',          hint: '8 записей',                group: 'Таблицы',    to: '/spaces' },
-  { id: 'sch02',        icon: 'plus',     label: 'Создать таблицу',        hint: 'Из шаблона или с нуля',    group: 'Действия',   to: '/spaces' },
-  { id: 'api01',        icon: 'code',     label: 'REST API',               hint: 'Документация эндпоинтов',  group: 'Выходы',     to: '/spaces' },
-  { id: 'api02',        icon: 'key',      label: 'Ключи API',              hint: 'Создать или отозвать',     group: 'Выходы',     to: '/spaces' },
-  { id: 'files',        icon: 'folder',   label: 'Файлы и списки',         hint: 'Списки для фронта · API',  group: 'Выходы',     to: '/spaces' },
-  { id: 'pdf01',        icon: 'file',     label: 'PDF',                    hint: 'Шаблоны и генерация',      group: 'Выходы',     to: '/spaces' },
-  { id: 'set01',        icon: 'users',    label: 'Команда',                hint: 'Участники и роли',         group: 'Настройки',  to: '/spaces' },
-  { id: 'set02',        icon: 'settings', label: 'Настройки пространства', hint: 'Имя, slug, удаление',      group: 'Настройки',  to: '/spaces' },
-  { id: 'spaces',       icon: 'box',      label: 'Все пространства',       hint: 'Сменить пространство',     group: 'Навигация',  to: '/spaces' },
-]
+const spaceSlug = computed(() => route.params.slug as string | undefined)
+
+const ALL = computed<PaletteItem[]>(() => {
+  const items: PaletteItem[] = []
+
+  // Tables in current space
+  if (spaceSlug.value && schemaStore.tables.length) {
+    for (const t of schemaStore.tables) {
+      items.push({
+        id: `table-${t.id}`,
+        icon: 'table',
+        label: t.name,
+        hint: `${t.fields.length} полей`,
+        group: 'Таблицы',
+        to: `/spaces/${spaceSlug.value}/tables/${t.slug}`,
+      })
+    }
+    items.push({
+      id: 'act-create-table', icon: 'plus', label: 'Создать таблицу',
+      hint: 'Из шаблона или с нуля', group: 'Действия',
+      to: `/spaces/${spaceSlug.value}/tables`,
+    })
+    items.push({ id: 'act-api', icon: 'code', label: 'REST API', hint: 'Документация эндпоинтов', group: 'Выходы', to: `/spaces/${spaceSlug.value}/api` })
+    items.push({ id: 'act-keys', icon: 'key', label: 'Ключи API', hint: 'Создать или отозвать', group: 'Выходы', to: `/spaces/${spaceSlug.value}/api` })
+    items.push({ id: 'act-files', icon: 'folder', label: 'Файлы и списки', hint: 'Списки для фронта · API', group: 'Выходы', to: `/spaces/${spaceSlug.value}/files` })
+    items.push({ id: 'act-pdf', icon: 'file', label: 'PDF', hint: 'Шаблоны и генерация', group: 'Выходы', to: `/spaces/${spaceSlug.value}/pdf` })
+    items.push({ id: 'set-team', icon: 'users', label: 'Команда', hint: 'Участники и роли', group: 'Настройки', to: `/spaces/${spaceSlug.value}/team` })
+    items.push({ id: 'set-space', icon: 'settings', label: 'Настройки пространства', hint: 'Имя, slug, удаление', group: 'Настройки', to: `/spaces/${spaceSlug.value}/settings` })
+  }
+
+  // All spaces for navigation
+  for (const s of spacesStore.spaces) {
+    items.push({
+      id: `space-${s.id}`,
+      icon: 'box',
+      label: s.name,
+      hint: s.slug,
+      group: 'Пространства',
+      to: `/spaces/${s.slug}/tables`,
+    })
+  }
+  if (!spacesStore.spaces.length) {
+    items.push({ id: 'nav-spaces', icon: 'box', label: 'Все пространства', hint: 'Сменить пространство', group: 'Навигация', to: '/spaces' })
+  }
+
+  return items
+})
 
 const filtered = computed<PaletteItem[]>(() => {
   const qv = q.value.trim().toLowerCase()
   return qv
-    ? ALL.filter(i => i.label.toLowerCase().includes(qv) || i.hint.toLowerCase().includes(qv))
-    : ALL
+    ? ALL.value.filter(i => i.label.toLowerCase().includes(qv) || i.hint.toLowerCase().includes(qv))
+    : ALL.value
 })
 
 const groups = computed<Record<string, PaletteItem[]>>(() => {

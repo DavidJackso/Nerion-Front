@@ -887,6 +887,16 @@ onUnmounted(() => {
             />
           </template>
 
+          <!-- Date / datetime picker -->
+          <template v-else-if="f.type === 'date' || f.type === 'datetime'">
+            <NDatePicker
+              :model-value="createVals[f.slug] || undefined"
+              :type="f.type"
+              :placeholder="`Введи ${f.name.toLowerCase()}…`"
+              @update:model-value="createVals[f.slug] = $event"
+            />
+          </template>
+
           <!-- All other field types -->
           <template v-else>
             <NInput
@@ -895,8 +905,6 @@ onUnmounted(() => {
               :type="
                 f.type === 'number' ? 'number'
                 : f.type === 'email' ? 'email'
-                : f.type === 'date' ? 'date'
-                : f.type === 'datetime' ? 'datetime-local'
                 : f.type === 'url' ? 'url'
                 : f.type === 'phone' ? 'tel'
                 : 'text'
@@ -971,6 +979,16 @@ onUnmounted(() => {
             />
           </template>
 
+          <!-- Date / datetime picker -->
+          <template v-else-if="f.type === 'date' || f.type === 'datetime'">
+            <NDatePicker
+              :model-value="editVals[f.slug] || undefined"
+              :type="f.type"
+              :placeholder="`Введи ${f.name.toLowerCase()}…`"
+              @update:model-value="editVals[f.slug] = $event"
+            />
+          </template>
+
           <template v-else>
             <NInput
               :model-value="editVals[f.slug] || ''"
@@ -978,8 +996,6 @@ onUnmounted(() => {
               :type="
                 f.type === 'number' ? 'number'
                 : f.type === 'email' ? 'email'
-                : f.type === 'date' ? 'date'
-                : f.type === 'datetime' ? 'datetime-local'
                 : f.type === 'url' ? 'url'
                 : f.type === 'phone' ? 'tel'
                 : 'text'

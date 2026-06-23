@@ -5,7 +5,7 @@ import { useSpacesStore } from '~/stores/spaces'
 import { useSpaceSlug } from '~/composables/useSpaceSlug'
 import { useToast } from '~/composables/useToast'
 
-definePageMeta({ layout: 'app', middleware: 'auth' })
+definePageMeta({ layout: 'app', middleware: [] })
 
 const route = useRoute()
 const router = useRouter()

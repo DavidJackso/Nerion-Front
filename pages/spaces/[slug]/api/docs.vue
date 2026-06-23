@@ -1,5 +1,5 @@
 <script setup lang="ts">
-definePageMeta({ layout: 'app', middleware: 'auth' })
+definePageMeta({ layout: 'app', middleware: [] })
 
 import { useSchemaStore } from '~/stores/schema'
 import { useSpacesStore } from '~/stores/spaces'

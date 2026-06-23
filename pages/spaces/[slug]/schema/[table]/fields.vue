@@ -3,7 +3,7 @@ import { useSchemaStore } from '~/stores/schema'
 import { useSpacesStore } from '~/stores/spaces'
 import { useSpaceSlug } from '~/composables/useSpaceSlug'
 
-definePageMeta({ layout: 'app', middleware: 'auth' })
+definePageMeta({ layout: 'app', middleware: [] })
 
 interface FieldConfig {
   id?: string

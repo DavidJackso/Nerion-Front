@@ -2,7 +2,7 @@
 import { useSchemaStore } from '~/stores/schema'
 import { useSpacesStore } from '~/stores/spaces'
 
-definePageMeta({ layout: 'app', middleware: 'auth' })
+definePageMeta({ layout: 'app', middleware: [] })
 
 const route = useRoute()
 const router = useRouter()

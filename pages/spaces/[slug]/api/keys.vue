@@ -1,5 +1,5 @@
 <script setup lang="ts">
-definePageMeta({ layout: 'app', middleware: 'auth' })
+definePageMeta({ layout: 'app', middleware: [] })
 
 import { listKeys, createKey, revokeKey } from '~/api/apikeys'
 import { useSpacesStore } from '~/stores/spaces'

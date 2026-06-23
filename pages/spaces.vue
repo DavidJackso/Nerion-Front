@@ -2,7 +2,7 @@
 import { useSpacesStore } from '~/stores/spaces'
 import { useAuthStore } from '~/stores/auth'
 
-definePageMeta({ layout: 'default', middleware: 'auth' })
+definePageMeta({ layout: 'default', middleware: [] })
 
 const spacesStore = useSpacesStore()
 const auth = useAuthStore()

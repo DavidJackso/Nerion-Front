@@ -4,7 +4,7 @@ import { useSchemaStore } from '~/stores/schema'
 import { useSpaceSlug } from '~/composables/useSpaceSlug'
 import { useToast } from '~/composables/useToast'
 
-definePageMeta({ layout: 'app', middleware: 'auth' })
+definePageMeta({ layout: 'app', middleware: [] })
 
 interface List {
   id: string

@@ -3,7 +3,7 @@ import { listPdfTemplates as listTemplates, uploadTemplate, saveMapping, generat
 import { useSchemaStore } from '~/stores/schema'
 import { useSpacesStore } from '~/stores/spaces'
 
-definePageMeta({ layout: 'app', middleware: 'auth' })
+definePageMeta({ layout: 'app', middleware: [] })
 
 // ── Types ──────────────────────────────────────────────────────
 type PdfViewState = 'templates' | 'library' | 'editor' | 'generate' | 'archive'

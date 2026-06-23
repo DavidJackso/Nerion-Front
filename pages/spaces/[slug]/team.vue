@@ -4,7 +4,7 @@ import { useSpaceSlug } from '~/composables/useSpaceSlug'
 import { useToast } from '~/composables/useToast'
 import { listMembers, inviteMember, removeMember } from '~/api/members'
 
-definePageMeta({ layout: 'app', middleware: 'auth' })
+definePageMeta({ layout: 'app', middleware: [] })
 
 interface SpaceMember {
   id: string

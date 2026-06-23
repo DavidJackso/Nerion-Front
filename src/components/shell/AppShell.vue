@@ -1,19 +1,12 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
 import AppSidebar from './AppSidebar.vue'
 import CommandPalette from './CommandPalette.vue'
 import NIcon from '@/components/primitives/NIcon.vue'
 
 const props = defineProps({
-  // Each item: string | { label: string, to: RouteLocationRaw }
   breadcrumb: { type: Array, default: () => [] },
 })
-
-const router = useRouter()
-
-function bcLabel(b) { return typeof b === 'string' ? b : b.label }
-function bcTo(b) { return typeof b === 'string' ? null : (b.to || null) }
 
 const showPalette = ref(false)
 
@@ -57,17 +50,13 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
         <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; flex: 1; min-width: 0; overflow: hidden">
           <template v-for="(b, i) in breadcrumb" :key="i">
             <span v-if="i > 0" style="color: var(--fg-3); flex-shrink: 0">/</span>
-            <span
-              @click="bcTo(b) ? router.push(bcTo(b)) : undefined"
-              :style="{
-                color: i === breadcrumb.length - 1 ? 'var(--fg-1)' : bcTo(b) ? 'var(--brand-primary)' : 'var(--fg-2)',
-                fontWeight: i === breadcrumb.length - 1 ? 500 : 400,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                cursor: bcTo(b) ? 'pointer' : 'default',
-              }"
-            >{{ bcLabel(b) }}</span>
+            <span :style="{
+              color: i === breadcrumb.length - 1 ? 'var(--fg-1)' : 'var(--fg-2)',
+              fontWeight: i === breadcrumb.length - 1 ? 500 : 400,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }">{{ b }}</span>
           </template>
         </div>
 

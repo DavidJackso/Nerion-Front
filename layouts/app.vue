@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 
-const props = defineProps<{
-  breadcrumb?: string[]
-}>()
+// Shared breadcrumb state — pages set this via useState('breadcrumb')
+// Each item: string | { label: string, to: string }
+const breadcrumb = useState<Array<string | { label: string; to?: string }>>('breadcrumb', () => [])
+
+const router = useRouter()
 
 const showPalette = ref(false)
 
@@ -59,17 +61,19 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
             overflow: hidden;
           "
         >
-          <template v-for="(b, i) in (breadcrumb ?? [])" :key="i">
+          <template v-for="(b, i) in breadcrumb" :key="i">
             <span v-if="i > 0" style="color: var(--fg-3); flex-shrink: 0">/</span>
             <span
+              @click="typeof b !== 'string' && b.to ? router.push(b.to) : undefined"
               :style="{
-                color: i === (breadcrumb ?? []).length - 1 ? 'var(--fg-1)' : 'var(--fg-2)',
-                fontWeight: i === (breadcrumb ?? []).length - 1 ? 500 : 400,
+                color: i === breadcrumb.length - 1 ? 'var(--fg-1)' : (typeof b !== 'string' && b.to ? 'var(--brand-primary)' : 'var(--fg-2)'),
+                fontWeight: i === breadcrumb.length - 1 ? 500 : 400,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
+                cursor: typeof b !== 'string' && b.to ? 'pointer' : 'default',
               }"
-            >{{ b }}</span>
+            >{{ typeof b === 'string' ? b : b.label }}</span>
           </template>
         </div>
 

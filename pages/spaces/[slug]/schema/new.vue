@@ -59,7 +59,7 @@ async function proceed() {
       tableSlugInput.value || slugify(tableName.value),
       picked.value && picked.value !== 'blank' ? picked.value : undefined,
     )
-    router.push(`/spaces/${spaceSlug.value}/schema/${t.slug}/fields`)
+    await navigateTo(`/spaces/${spaceSlug.value}/schema/${t.slug}/fields`)
   } catch (e: any) {
     error.value = e.message
   } finally {

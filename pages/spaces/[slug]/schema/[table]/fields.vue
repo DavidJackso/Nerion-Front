@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useSchemaStore } from '~/stores/schema'
 import { useSpacesStore } from '~/stores/spaces'
+import { useSpaceSlug } from '~/composables/useSpaceSlug'
 
 definePageMeta({ layout: 'app', middleware: 'auth' })
 
@@ -177,7 +178,7 @@ async function save() {
       relation_target: f.type === 'relation' ? (f.relation?.targetTable || '') : undefined,
     }))
     await schemaStore.updateFields(spaceSlug.value, tableSlug.value, payload)
-    router.push(`/spaces/${spaceSlug.value}/tables/${tableSlug.value}`)
+    await navigateTo(`/spaces/${spaceSlug.value}/tables/${tableSlug.value}`)
   } catch (e: any) {
     if (e.fields) {
       error.value = Object.entries(e.fields as Record<string, string>)
@@ -334,7 +335,7 @@ async function save() {
       >{{ error }}</pre>
 
       <div style="margin-top: 32px; display: flex; justify-content: space-between">
-        <NButton variant="ghost" size="md" @click="router.push(`/spaces/${spaceSlug}/schema/new`)">← Назад</NButton>
+        <NButton variant="ghost" size="md" @click="navigateTo(`/spaces/${spaceSlug}/schema/new`)">← Назад</NButton>
         <NButton variant="primary" size="md" :disabled="saveLoading" @click="save">
           {{ saveLoading ? 'Сохранение…' : 'Создать таблицу' }}
         </NButton>

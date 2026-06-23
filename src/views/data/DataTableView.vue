@@ -14,6 +14,7 @@ import NToast from '@/components/primitives/NToast.vue'
 import NToggle from '@/components/primitives/NToggle.vue'
 import NInput from '@/components/primitives/NInput.vue'
 import NSelect from '@/components/primitives/NSelect.vue'
+import NDatePicker from '@/components/primitives/NDatePicker.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -40,6 +41,20 @@ const showDeleteTable = ref(false)
 const deleteTableLoading = ref(false)
 const createVals = ref({})
 const createError = ref('')
+
+function datePickerToStr(val, mode) {
+  if (!val?.date) return ''
+  if (mode === 'date') return val.date
+  return val.time ? `${val.date}T${val.time}` : val.date
+}
+
+function strToDatePicker(str, mode) {
+  if (!str) return null
+  if (mode === 'date') return { date: str.slice(0, 10) }
+  const iso = str.includes('T') ? str : str.replace(' ', 'T')
+  const [date, timeFull] = iso.split('T')
+  return { date, time: timeFull ? timeFull.slice(0, 5) : '00:00' }
+}
 
 const toast = ref(null)
 function showToast(title, tone = 'success') {
@@ -473,9 +488,18 @@ const hasNext = computed(() => (page.value + 1) * LIMIT < recordsStore.total)
               style="width: 100%; min-height: 80px; border-radius: 6px; border: 0.5px solid var(--border-strong); padding: 8px 12px; font-size: 14px; background: var(--bg-0); color: var(--fg-1); outline: 0; font-family: inherit; resize: vertical; box-sizing: border-box" />
           </template>
 
+          <template v-else-if="f.type === 'date' || f.type === 'datetime'">
+            <NDatePicker
+              :model-value="strToDatePicker(createVals[f.slug], f.type)"
+              @update:model-value="createVals[f.slug] = datePickerToStr($event, f.type)"
+              :mode="f.type"
+              :placeholder="`Введи ${f.name.toLowerCase()}…`"
+            />
+          </template>
+
           <template v-else>
             <NInput :model-value="createVals[f.slug] || ''" @update:model-value="createVals[f.slug] = $event"
-              :type="f.type === 'number' ? 'number' : f.type === 'email' ? 'email' : f.type === 'date' ? 'date' : f.type === 'datetime' ? 'datetime-local' : f.type === 'url' ? 'url' : f.type === 'phone' ? 'tel' : 'text'"
+              :type="f.type === 'number' ? 'number' : f.type === 'email' ? 'email' : f.type === 'url' ? 'url' : f.type === 'phone' ? 'tel' : 'text'"
               :placeholder="`Введи ${f.name.toLowerCase()}…`" />
           </template>
         </div>

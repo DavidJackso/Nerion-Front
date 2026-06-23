@@ -101,7 +101,7 @@ function listEndpoint(l: List): string {
 }
 
 function listCodeSnippet(l: List): string {
-  return `const res = await fetch('https://app.nerion.ru${listEndpoint(l)}');
+  return `const res = await fetch('https://nerionapp.ru${listEndpoint(l)}');
 const { data } = await res.json();
 console.log(data); // массив записей таблицы ${l.table_slug}`
 }
@@ -109,15 +109,15 @@ console.log(data); // массив записей таблицы ${l.table_slug}
 function heroCodeSnippet(): string {
   const first = lists.value[0]
   if (!first) {
-    return `const res = await fetch('https://app.nerion.ru/lists/${slug.value}/my-list');
+    return `const res = await fetch('https://nerionapp.ru/lists/${slug.value}/my-list');
 const { data } = await res.json();`
   }
-  return `const { data } = await (await fetch('https://app.nerion.ru${listEndpoint(first)}')).json();
+  return `const { data } = await (await fetch('https://nerionapp.ru${listEndpoint(first)}')).json();
 data.forEach(rec => render(rec)); // ${first.row_limit ?? 50} записей, без хардкода`
 }
 
 function copyEndpoint(l: List) {
-  navigator.clipboard.writeText(`https://app.nerion.ru${listEndpoint(l)}`).then(() => show('Адрес скопирован'))
+  navigator.clipboard.writeText(`https://nerionapp.ru${listEndpoint(l)}`).then(() => show('Адрес скопирован'))
 }
 
 function copyCode(text: string) {

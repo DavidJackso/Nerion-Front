@@ -16,19 +16,22 @@ interface Endpoint {
 const { slug, space } = useSpaceSlug()
 const schemaStore = useSchemaStore()
 
-const picked = ref<Endpoint | null>(null)
+// Store by stable key (method:path) to survive endpoints recompute
+const pickedKey = ref<string | null>(null)
 const tab = ref<'curl' | 'js' | 'py'>('curl')
 const copied = ref(false)
 
+function epKey(e: Endpoint) { return `${e.method}:${e.path}` }
+
 onMounted(async () => {
   await schemaStore.fetchTables(slug.value)
-  if (schemaStore.tables.length && !picked.value) {
-    picked.value = endpoints.value[0] ?? null
+  if (schemaStore.tables.length && !pickedKey.value) {
+    pickedKey.value = epKey(endpoints.value[0])
   }
 })
 
 watch(() => schemaStore.tables, (tables) => {
-  if (tables.length && !picked.value) picked.value = endpoints.value[0] ?? null
+  if (tables.length && !pickedKey.value) pickedKey.value = epKey(endpoints.value[0])
 })
 
 const METHOD_COLOR: Record<string, [string, string]> = {
@@ -63,9 +66,9 @@ const groupedEndpoints = computed(() => {
   return [...groups.values()]
 })
 
-const ep = computed(() => picked.value)
+const ep = computed(() => endpoints.value.find(e => epKey(e) === pickedKey.value) ?? null)
 
-const BASE_URL = 'https://app.nerion.ru'
+const BASE_URL = 'https://nerionapp.ru'
 const SAMPLE_ID = 'rec_a8f2b4'
 const SAMPLE_KEY = 'nrn_live_••••••••3f2a'
 
@@ -169,12 +172,12 @@ const breadcrumb = computed(() => [space.value?.name || slug.value, 'REST API'])
           <button
             v-for="(e, i) in group.eps"
             :key="i"
-            @click="picked = e"
+            @click="pickedKey = epKey(e)"
             :style="{
               width: '100%', padding: '7px 16px 7px 13px', display: 'flex', alignItems: 'center', gap: '10px',
-              background: picked === e ? 'var(--purple-50, #f5f3ff)' : 'transparent',
+              background: epKey(e) === pickedKey ? 'var(--brand-tint, #f5f3ff)' : 'transparent',
               border: 0,
-              borderLeft: `3px solid ${picked === e ? 'var(--brand-primary, #7c3aed)' : 'transparent'}`,
+              borderLeft: `3px solid ${epKey(e) === pickedKey ? 'var(--brand-primary)' : 'transparent'}`,
               cursor: 'pointer', textAlign: 'left',
               boxSizing: 'border-box',
               transition: 'background 100ms',

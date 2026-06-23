@@ -33,7 +33,7 @@ const ALL = computed<PaletteItem[]>(() => {
         id: `table-${t.id}`,
         icon: 'table',
         label: t.name,
-        hint: `${t.fields?.length ?? 0} полей`,
+        hint: t.fields?.length ? `${t.fields.length} полей` : t.slug,
         group: 'Таблицы',
         to: `/spaces/${spaceSlug.value}/tables/${t.slug}`,
       })
@@ -41,10 +41,10 @@ const ALL = computed<PaletteItem[]>(() => {
     items.push({
       id: 'act-create-table', icon: 'plus', label: 'Создать таблицу',
       hint: 'Из шаблона или с нуля', group: 'Действия',
-      to: `/spaces/${spaceSlug.value}/tables`,
+      to: `/spaces/${spaceSlug.value}/schema/new`,
     })
-    items.push({ id: 'act-api', icon: 'code', label: 'REST API', hint: 'Документация эндпоинтов', group: 'Выходы', to: `/spaces/${spaceSlug.value}/api` })
-    items.push({ id: 'act-keys', icon: 'key', label: 'Ключи API', hint: 'Создать или отозвать', group: 'Выходы', to: `/spaces/${spaceSlug.value}/api` })
+    items.push({ id: 'act-api', icon: 'code', label: 'REST API', hint: 'Документация эндпоинтов', group: 'Выходы', to: `/spaces/${spaceSlug.value}/api/docs` })
+    items.push({ id: 'act-keys', icon: 'key', label: 'Ключи API', hint: 'Создать или отозвать', group: 'Выходы', to: `/spaces/${spaceSlug.value}/api/keys` })
     items.push({ id: 'act-files', icon: 'folder', label: 'Файлы и списки', hint: 'Списки для фронта · API', group: 'Выходы', to: `/spaces/${spaceSlug.value}/files` })
     items.push({ id: 'act-pdf', icon: 'file', label: 'PDF', hint: 'Шаблоны и генерация', group: 'Выходы', to: `/spaces/${spaceSlug.value}/pdf` })
     items.push({ id: 'set-team', icon: 'users', label: 'Команда', hint: 'Участники и роли', group: 'Настройки', to: `/spaces/${spaceSlug.value}/team` })

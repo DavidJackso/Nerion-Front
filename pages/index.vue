@@ -7,18 +7,18 @@ const navScrolled = ref(false)
 const codeTab = ref('curl')
 
 const SAMPLES: Record<string, string> = {
-  curl: `curl -X GET 'https://app.nerion.ru/api/math-dept/teachers' \\
+  curl: `curl -X GET 'https://nerionapp.ru/api/math-dept/teachers' \\
   -H 'Authorization: Bearer nrn_live_••••3f2a' \\
   -H 'Content-Type: application/json'`,
   js: `const res = await fetch(
-  'https://app.nerion.ru/api/math-dept/teachers',
+  'https://nerionapp.ru/api/math-dept/teachers',
   { headers: { 'Authorization': \`Bearer \${process.env.NERION_KEY}\` } }
 );
 const { data } = await res.json();`,
   py: `import requests, os
 
 r = requests.get(
-  'https://app.nerion.ru/api/math-dept/teachers',
+  'https://nerionapp.ru/api/math-dept/teachers',
   headers={'Authorization': f'Bearer {os.environ["NERION_KEY"]}'},
 )
 data = r.json()`,
@@ -106,7 +106,7 @@ onUnmounted(() => {
               <span class="tl" style="background:#ff5f57"></span>
               <span class="tl" style="background:#febc2e"></span>
               <span class="tl" style="background:#28c840"></span>
-              <span class="mock-url">app.nerion.ru/math-dept/teachers</span>
+              <span class="mock-url">nerionapp.ru/math-dept/teachers</span>
             </div>
             <div class="mock-body">
               <aside class="mock-side">
@@ -304,7 +304,7 @@ onUnmounted(() => {
             <button class="ctab" :class="{ active: codeTab === 'curl' }" @click="codeTab = 'curl'">cURL</button>
             <button class="ctab" :class="{ active: codeTab === 'js' }" @click="codeTab = 'js'">JavaScript</button>
             <button class="ctab" :class="{ active: codeTab === 'py' }" @click="codeTab = 'py'">Python</button>
-            <span class="ttl">app.nerion.ru</span>
+            <span class="ttl">nerionapp.ru</span>
           </div>
           <pre>{{ SAMPLES[codeTab] }}</pre>
         </div>
@@ -325,7 +325,7 @@ onUnmounted(() => {
               <span class="tl" style="background:#ff5f57"></span>
               <span class="tl" style="background:#febc2e"></span>
               <span class="tl" style="background:#28c840"></span>
-              <span>app.nerion.ru/math-dept/files</span>
+              <span>nerionapp.ru/math-dept/files</span>
             </div>
             <img src="/shots/create.png" alt="Списки файлов в Nerion" loading="lazy"/>
             <div class="desc"><h4>Публичные списки файлов</h4><p>Опубликованный список — постоянный адрес, по которому фронт забирает массив файлов. Без хардкода ссылок.</p></div>
@@ -335,7 +335,7 @@ onUnmounted(() => {
               <span class="tl" style="background:#ff5f57"></span>
               <span class="tl" style="background:#febc2e"></span>
               <span class="tl" style="background:#28c840"></span>
-              <span>app.nerion.ru/math-dept/lists</span>
+              <span>nerionapp.ru/math-dept/lists</span>
             </div>
             <img src="/shots/detail.png" alt="Список и его API в Nerion" loading="lazy"/>
             <div class="desc"><h4>Список и его API</h4><p>Каждый список сразу доступен по REST с примерами на JavaScript и cURL — копируй и вставляй в проект.</p></div>
@@ -444,7 +444,7 @@ onUnmounted(() => {
         </div>
         <div class="ft-bottom">
           <span>© Nerion · 2026</span>
-          <span class="mono" style="font-size:12px">app.nerion.ru</span>
+          <span class="mono" style="font-size:12px">nerionapp.ru</span>
         </div>
       </div>
     </footer>

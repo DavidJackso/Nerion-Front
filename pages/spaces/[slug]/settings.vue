@@ -61,7 +61,7 @@ const breadcrumb = computed(() => [space.value?.name || routeSlug.value, 'Нас
         <div>
           <label style="font-size: 12px; color: var(--fg-2); font-weight: 500; display: block; margin-bottom: 6px">Slug</label>
           <div style="display: flex; align-items: center; height: 36px; border: 0.5px solid var(--border-strong); border-radius: 6px; overflow: hidden; font-family: var(--font-mono); font-size: 13px">
-            <span style="padding: 0 10px; background: var(--bg-2); color: var(--fg-3); height: 100%; display: flex; align-items: center; border-right: 0.5px solid var(--border-default); white-space: nowrap">app.nerion.ru/</span>
+            <span style="padding: 0 10px; background: var(--bg-2); color: var(--fg-3); height: 100%; display: flex; align-items: center; border-right: 0.5px solid var(--border-default); white-space: nowrap">nerionapp.ru/</span>
             <span style="flex: 1; padding: 0 10px; color: var(--fg-1)">{{ routeSlug }}</span>
           </div>
           <p style="font-size: 11px; color: var(--fg-3); margin-top: 5px">Slug нельзя изменить. Изменение потребует обновления всех интеграций.</p>

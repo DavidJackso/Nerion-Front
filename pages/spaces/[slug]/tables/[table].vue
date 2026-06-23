@@ -354,12 +354,6 @@ const filteredRecords = computed(() => {
   return recordsStore.records.filter((rec: any) => activeFilters.value.every((f: Filter) => matchFilter(rec, f)))
 })
 
-const popSelectStyle = {
-  height: '30px', borderRadius: '6px', border: '0.5px solid var(--border-strong)',
-  padding: '0 24px 0 9px', fontSize: '12px', background: 'var(--bg-0)',
-  color: 'var(--fg-1)', outline: '0', appearance: 'none', cursor: 'pointer', fontFamily: 'inherit',
-} as const
-
 // ── Data loading ──────────────────────────────────────────────────────────────
 
 let loadSeq = 0
@@ -493,18 +487,20 @@ onUnmounted(() => {
             <div style="padding: 14px; display: flex; flex-direction: column; gap: 10px; max-height: 280px; overflow: auto">
               <div v-if="!filters.length" style="font-size: 12px; color: var(--fg-3); text-align: center; padding: 8px 0">Условий пока нет</div>
               <div v-for="(f, i) in filters" :key="i" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap">
-                <div style="position: relative">
-                  <select :value="f.field" @change="onFilterFieldChange(i, ($event.target as HTMLSelectElement).value)" :style="popSelectStyle">
-                    <option v-for="fld in (fields as any[])" :key="fld.slug" :value="fld.slug">{{ fld.name }}</option>
-                  </select>
-                  <NIcon name="chevd" :size="10" color="var(--fg-3)" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); pointer-events: none" />
-                </div>
-                <div style="position: relative">
-                  <select :value="f.op" @change="filters[i].op = ($event.target as HTMLSelectElement).value" :style="popSelectStyle">
-                    <option v-for="[v, l] in opsForField(f.field)" :key="v" :value="v">{{ l }}</option>
-                  </select>
-                  <NIcon name="chevd" :size="10" color="var(--fg-3)" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); pointer-events: none" />
-                </div>
+                <NSelect
+                  :modelValue="f.field"
+                  @update:modelValue="onFilterFieldChange(i, $event as string)"
+                  size="sm"
+                  :options="(fields as any[]).map((fld: any) => ({ value: fld.slug, label: fld.name }))"
+                  style="width: 120px"
+                />
+                <NSelect
+                  :modelValue="f.op"
+                  @update:modelValue="filters[i].op = $event as string"
+                  size="sm"
+                  :options="opsForField(f.field).map(([v, l]) => ({ value: v, label: l }))"
+                  style="width: 120px"
+                />
                 <template v-if="fieldBySlug(f.field)?.type === 'boolean'">
                   <div style="display: flex; gap: 2px; padding: 2px; background: var(--bg-2); border-radius: 6px">
                     <button v-for="[v, l] in [['true','да'],['false','нет']]" :key="v"
@@ -513,13 +509,14 @@ onUnmounted(() => {
                   </div>
                 </template>
                 <template v-else-if="fieldBySlug(f.field)?.type === 'enum'">
-                  <div style="position: relative; flex: 1; min-width: 110px">
-                    <select :value="f.value" @change="filters[i].value = ($event.target as HTMLSelectElement).value" :style="{ ...popSelectStyle, width: '100%' }">
-                      <option value="">значение…</option>
-                      <option v-for="v in fieldBySlug(f.field)?.enum_values || []" :key="v" :value="v">{{ v }}</option>
-                    </select>
-                    <NIcon name="chevd" :size="10" color="var(--fg-3)" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); pointer-events: none" />
-                  </div>
+                  <NSelect
+                    :modelValue="f.value || null"
+                    @update:modelValue="filters[i].value = ($event as string) || ''"
+                    size="sm"
+                    placeholder="значение…"
+                    :options="(fieldBySlug(f.field)?.enum_values || []).map((v: string) => ({ value: v, label: v }))"
+                    style="flex: 1; min-width: 110px"
+                  />
                 </template>
                 <template v-else>
                   <input :value="f.value" @input="filters[i].value = ($event.target as HTMLInputElement).value"

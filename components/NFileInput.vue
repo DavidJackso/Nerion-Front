@@ -3,17 +3,20 @@ import { uploadFile } from '~/api/files'
 
 const props = defineProps<{
   spaceSlug: string
-  modelValue: string | null
+  modelValue: string | string[] | null
+  multiple?: boolean
 }>()
 
 const emit = defineEmits<{
-  'update:modelValue': [value: string | null]
+  'update:modelValue': [value: string | string[] | null]
 }>()
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const uploading = ref(false)
+const uploadingCount = ref(0)
 const error = ref('')
 const uploadedSize = ref(0)
+const sizeMap = ref<Record<string, number>>({})
 
 function filename(key: string | null): string {
   if (!key) return ''
@@ -26,27 +29,64 @@ function fmtSize(bytes: number): string {
   return `${Math.round(bytes / 1024)} КБ`
 }
 
+const multipleValues = computed<string[]>(() =>
+  props.multiple ? ((props.modelValue as string[]) ?? []) : []
+)
+
+function pluralFiles(n: number): string {
+  if (n % 10 === 1 && n % 100 !== 11) return 'файл'
+  if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return 'файла'
+  return 'файлов'
+}
+
 async function onFileChange(e: Event) {
-  const file = (e.target as HTMLInputElement).files?.[0]
-  if (!file) return
-  uploading.value = true
+  const input = e.target as HTMLInputElement
+  const files = Array.from(input.files ?? [])
+  if (!files.length) return
   error.value = ''
-  try {
-    const result = await uploadFile(props.spaceSlug, file)
-    uploadedSize.value = result.size
-    emit('update:modelValue', result.key)
-  } catch (err: any) {
-    error.value = err?.message ?? 'Ошибка загрузки'
-  } finally {
-    uploading.value = false
-    if (fileInput.value) fileInput.value.value = ''
+
+  if (props.multiple) {
+    uploadingCount.value = files.length
+    const results = await Promise.allSettled(
+      files.map(f => uploadFile(props.spaceSlug, f))
+    )
+    const newKeys: string[] = []
+    for (const r of results) {
+      if (r.status === 'fulfilled') {
+        sizeMap.value[r.value.key] = r.value.size
+        newKeys.push(r.value.key)
+      } else {
+        error.value = (r.reason as any)?.message ?? 'Ошибка загрузки'
+      }
+    }
+    emit('update:modelValue', [...multipleValues.value, ...newKeys])
+    uploadingCount.value = 0
+  } else {
+    uploading.value = true
+    try {
+      const result = await uploadFile(props.spaceSlug, files[0])
+      uploadedSize.value = result.size
+      emit('update:modelValue', result.key)
+    } catch (err: any) {
+      error.value = err?.message ?? 'Ошибка загрузки'
+    } finally {
+      uploading.value = false
+    }
   }
+
+  if (fileInput.value) fileInput.value.value = ''
 }
 
 function remove() {
   emit('update:modelValue', null)
   uploadedSize.value = 0
   error.value = ''
+}
+
+function removeOne(key: string) {
+  const updated = multipleValues.value.filter(k => k !== key)
+  delete sizeMap.value[key]
+  emit('update:modelValue', updated)
 }
 </script>
 

@@ -33,7 +33,7 @@ const ALL = computed<PaletteItem[]>(() => {
         id: `table-${t.id}`,
         icon: 'table',
         label: t.name,
-        hint: `${t.fields.length} полей`,
+        hint: `${t.fields?.length ?? 0} полей`,
         group: 'Таблицы',
         to: `/spaces/${spaceSlug.value}/tables/${t.slug}`,
       })

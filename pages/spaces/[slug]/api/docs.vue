@@ -171,12 +171,13 @@ const breadcrumb = computed(() => [space.value?.name || slug.value, 'REST API'])
             :key="i"
             @click="picked = e"
             :style="{
-              width: '100%', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '10px',
-              background: picked === e ? 'var(--brand-tint-strong)' : 'transparent',
+              width: '100%', padding: '7px 16px 7px 13px', display: 'flex', alignItems: 'center', gap: '10px',
+              background: picked === e ? 'var(--purple-50, #f5f3ff)' : 'transparent',
               border: 0,
-              borderLeft: `3px solid ${picked === e ? 'var(--brand-primary)' : 'transparent'}`,
+              borderLeft: `3px solid ${picked === e ? 'var(--brand-primary, #7c3aed)' : 'transparent'}`,
               cursor: 'pointer', textAlign: 'left',
               boxSizing: 'border-box',
+              transition: 'background 100ms',
             }"
           >
             <span

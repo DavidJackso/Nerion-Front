@@ -49,7 +49,7 @@ const style = computed(() => {
     gap: '6px',
     border: vars[v]?.border || 'none',
     borderRadius: '6px',
-    cursor: props.disabled ? 'not-allowed' : 'pointer',
+    cursor: props.disabled ? 'default' : 'pointer',
     fontFamily: 'var(--font-sans)',
     fontWeight: 500,
     lineHeight: 1,

@@ -220,6 +220,12 @@ function isBoolean(field) {
   return field.type === 'boolean'
 }
 
+const popSelectStyle = {
+  height: '30px', borderRadius: '6px', border: '0.5px solid var(--border-strong)',
+  padding: '0 24px 0 9px', fontSize: '12px', background: 'var(--bg-0)',
+  color: 'var(--fg-1)', outline: 0, appearance: 'none', cursor: 'pointer', fontFamily: 'inherit',
+}
+
 const MONO_HUES = ['var(--purple-400)', 'var(--green-500)', 'var(--amber-500)', 'var(--blue-500)', 'var(--purple-600)']
 function monogram(name) {
   const s = String(name || '')
@@ -230,9 +236,77 @@ function monogram(name) {
 }
 
 const breadcrumb = computed(() => [
-  space.value?.name || spaceSlug.value,
+  { label: space.value?.name || spaceSlug.value, to: { name: 'tables', params: { slug: spaceSlug.value } } },
   table.value?.name || tableSlug.value || '…',
 ])
+
+// ── Filters ────────────────────────────────────────────────
+const filters = ref([])
+const showFilter = ref(false)
+
+function fieldBySlug(slug) { return fields.value.find(f => f.slug === slug) }
+
+function defaultOp(field) {
+  if (!field) return 'contains'
+  if (['number', 'date', 'datetime'].includes(field.type)) return 'eq'
+  if (field.type === 'boolean') return 'eq'
+  if (field.type === 'enum') return 'eq'
+  return 'contains'
+}
+
+function opsForField(slug) {
+  const f = fieldBySlug(slug)
+  if (!f) return [['contains', 'содержит'], ['ncontains', 'не содержит']]
+  if (['number'].includes(f.type)) return [['eq', '='], ['gt', 'больше'], ['lt', 'меньше']]
+  if (f.type === 'boolean') return [['eq', 'равно']]
+  if (f.type === 'enum') return [['eq', 'равно'], ['ne', 'не равно']]
+  return [['contains', 'содержит'], ['ncontains', 'не содержит']]
+}
+
+function addFilter() {
+  const f = fields.value[0]
+  if (!f) return
+  filters.value.push({ field: f.slug, op: defaultOp(f), value: '' })
+}
+
+function removeFilter(i) { filters.value.splice(i, 1) }
+function clearFilters() { filters.value = [] }
+
+function onFilterFieldChange(i, slug) {
+  const f = fieldBySlug(slug)
+  filters.value[i] = { field: slug, op: defaultOp(f), value: '' }
+}
+
+const activeFilters = computed(() =>
+  filters.value.filter(f => {
+    const field = fieldBySlug(f.field)
+    return field?.type === 'boolean' || String(f.value).trim() !== ''
+  })
+)
+
+function matchFilter(rec, filter) {
+  const f = fieldBySlug(filter.field)
+  if (!f) return true
+  const cell = rec[filter.field]
+  if (f.type === 'boolean') return Boolean(cell) === (filter.value === 'true')
+  if (f.type === 'number') {
+    const n = parseFloat(String(cell ?? ''))
+    const v = parseFloat(String(filter.value))
+    if (isNaN(v)) return true
+    return filter.op === 'gt' ? n > v : filter.op === 'lt' ? n < v : n === v
+  }
+  const s = String(cell ?? '').toLowerCase()
+  const v = String(filter.value).toLowerCase()
+  if (filter.op === 'ne') return s !== v
+  if (filter.op === 'eq') return s === v
+  if (filter.op === 'ncontains') return !s.includes(v)
+  return s.includes(v)
+}
+
+const filteredRecords = computed(() => {
+  if (!activeFilters.value.length) return recordsStore.records
+  return recordsStore.records.filter(rec => activeFilters.value.every(f => matchFilter(rec, f)))
+})
 
 const pageStart = computed(() => page.value * LIMIT + 1)
 const pageEnd = computed(() => Math.min((page.value + 1) * LIMIT, recordsStore.total))
@@ -274,7 +348,7 @@ const hasNext = computed(() => (page.value + 1) * LIMIT < recordsStore.total)
       </div>
 
       <!-- Toolbar -->
-      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px">
         <div style="position: relative; flex: 0 0 260px">
           <NIcon name="search" :size="14" color="var(--fg-3)" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%)" />
           <input v-model="search" placeholder="Поиск по всем полям…" :style="{
@@ -285,11 +359,110 @@ const hasNext = computed(() => (page.value + 1) * LIMIT < recordsStore.total)
           }" />
         </div>
 
+        <!-- Filter button -->
+        <div style="position: relative">
+          <button @click="showFilter = !showFilter" :style="{
+            display: 'inline-flex', alignItems: 'center', gap: '6px',
+            height: '32px', padding: '0 12px', borderRadius: '6px', fontSize: '13px',
+            fontWeight: 500, fontFamily: 'inherit', cursor: 'pointer', boxSizing: 'border-box',
+            border: `0.5px solid ${showFilter || activeFilters.length ? 'var(--purple-300)' : 'var(--border-strong)'}`,
+            background: showFilter || activeFilters.length ? 'var(--brand-tint)' : 'var(--bg-0)',
+            color: showFilter || activeFilters.length ? 'var(--purple-700)' : 'var(--fg-1)',
+          }">
+            <NIcon name="filter" :size="12" />
+            Фильтр
+            <span v-if="activeFilters.length" :style="{
+              minWidth: '16px', height: '16px', padding: '0 4px', borderRadius: '999px',
+              background: 'var(--brand-primary)', color: '#fff',
+              fontSize: '10px', fontWeight: 700,
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            }">{{ activeFilters.length }}</span>
+          </button>
+
+          <!-- Filter popover -->
+          <div v-if="showFilter" style="position: absolute; top: calc(100% + 6px); left: 0; z-index: 41; width: 380px; background: var(--bg-0); border: 0.5px solid var(--border-default); border-radius: 10px; box-shadow: 0 12px 32px rgba(20,14,58,.12),0 2px 6px rgba(20,14,58,.06)">
+            <div style="padding: 12px 14px; border-bottom: 0.5px solid var(--border-default); font-size: 12px; font-weight: 600; color: var(--fg-1)">Фильтры</div>
+            <div style="padding: 14px; display: flex; flex-direction: column; gap: 10px; max-height: 280px; overflow: auto">
+              <div v-if="!filters.length" style="font-size: 12px; color: var(--fg-3); text-align: center; padding: 8px 0">Условий пока нет</div>
+              <div v-for="(f, i) in filters" :key="i" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap">
+                <!-- Field selector -->
+                <div style="position: relative">
+                  <select :value="f.field" @change="onFilterFieldChange(i, $event.target.value)" :style="popSelectStyle">
+                    <option v-for="fld in fields" :key="fld.slug" :value="fld.slug">{{ fld.name }}</option>
+                  </select>
+                  <NIcon name="chevd" :size="10" color="var(--fg-3)" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); pointer-events: none" />
+                </div>
+                <!-- Op selector -->
+                <div style="position: relative">
+                  <select :value="f.op" @change="filters[i].op = $event.target.value" :style="popSelectStyle">
+                    <option v-for="[v, l] in opsForField(f.field)" :key="v" :value="v">{{ l }}</option>
+                  </select>
+                  <NIcon name="chevd" :size="10" color="var(--fg-3)" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); pointer-events: none" />
+                </div>
+                <!-- Value input -->
+                <template v-if="fieldBySlug(f.field)?.type === 'boolean'">
+                  <div style="display: flex; gap: 2px; padding: 2px; background: var(--bg-2); border-radius: 6px">
+                    <button v-for="[v, l] in [['true','да'],['false','нет']]" :key="v"
+                      @click="filters[i].value = v"
+                      :style="{ height: '24px', padding: '0 10px', border: 0, borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 500, fontFamily: 'inherit', background: f.value === v ? 'var(--bg-0)' : 'transparent', color: f.value === v ? 'var(--fg-1)' : 'var(--fg-3)', boxShadow: f.value === v ? '0 1px 2px rgba(20,14,58,.04)' : 'none' }">{{ l }}</button>
+                  </div>
+                </template>
+                <template v-else-if="fieldBySlug(f.field)?.type === 'enum'">
+                  <div style="position: relative; flex: 1; min-width: 110px">
+                    <select :value="f.value" @change="filters[i].value = $event.target.value" :style="{ ...popSelectStyle, width: '100%' }">
+                      <option value="">значение…</option>
+                      <option v-for="v in fieldBySlug(f.field)?.enum_values || []" :key="v" :value="v">{{ v }}</option>
+                    </select>
+                    <NIcon name="chevd" :size="10" color="var(--fg-3)" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); pointer-events: none" />
+                  </div>
+                </template>
+                <template v-else>
+                  <input :value="f.value" @input="filters[i].value = $event.target.value"
+                    :type="fieldBySlug(f.field)?.type === 'number' ? 'number' : 'text'"
+                    placeholder="значение…"
+                    style="flex: 1; min-width: 90px; height: 30px; border-radius: 6px; border: 0.5px solid var(--border-strong); padding: 0 9px; font-size: 12px; background: var(--bg-0); color: var(--fg-1); outline: 0; font-family: inherit; box-sizing: border-box" />
+                </template>
+                <button @click="removeFilter(i)" style="background: 0; border: 0; cursor: pointer; color: var(--fg-3); padding: 4px; display: flex; flex-shrink: 0">
+                  <NIcon name="x" :size="13" />
+                </button>
+              </div>
+            </div>
+            <div style="padding: 10px 14px; border-top: 0.5px solid var(--border-default); display: flex; justify-content: space-between; align-items: center">
+              <button @click="addFilter" style="background: 0; border: 0; cursor: pointer; color: var(--brand-primary); font-size: 12px; font-weight: 500; font-family: inherit; display: flex; align-items: center; gap: 5px">
+                <NIcon name="plus" :size="12" />Добавить условие
+              </button>
+              <button v-if="filters.length" @click="clearFilters" style="background: 0; border: 0; cursor: pointer; color: var(--fg-3); font-size: 12px; font-family: inherit">Сбросить всё</button>
+            </div>
+          </div>
+          <!-- Backdrop -->
+          <div v-if="showFilter" @click="showFilter = false" style="position: fixed; inset: 0; z-index: 40" />
+        </div>
+
         <div style="flex: 1" />
 
         <NButton variant="ghost" size="sm" @click="fetchRecords">
           <NIcon name="refresh" :size="12" />Обновить
         </NButton>
+      </div>
+
+      <!-- Active filter chips -->
+      <div v-if="activeFilters.length || sortBy" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 10px">
+        <span v-for="(f, i) in activeFilters" :key="i" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 4px 4px 10px; border-radius: 999px; background: var(--brand-tint); font-size: 12px; font-weight: 500; white-space: nowrap">
+          <span style="color: var(--fg-3)">{{ fieldBySlug(f.field)?.name }}</span>
+          <span style="color: var(--fg-3); font-weight: 400">{{ opsForField(f.field).find(([v]) => v === f.op)?.[1] }}</span>
+          <span style="color: var(--purple-700)">{{ f.value === 'true' ? 'да' : f.value === 'false' ? 'нет' : f.value }}</span>
+          <button @click="removeFilter(filters.indexOf(f))" style="background: 0; border: 0; cursor: pointer; color: var(--purple-500); padding: 2px; display: flex; border-radius: 50%; line-height: 0">
+            <NIcon name="x" :size="11" />
+          </button>
+        </span>
+        <span v-if="sortBy" style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 4px 4px 10px; border-radius: 999px; background: var(--bg-2); font-size: 12px; font-weight: 500; white-space: nowrap">
+          <NIcon name="sliders" :size="11" color="var(--fg-3)" />
+          <span style="color: var(--fg-2)">{{ fields.find(f => f.slug === sortBy)?.name }} {{ sortDir === 'asc' ? '↑' : '↓' }}</span>
+          <button @click="sortBy = null; sortDir = 'asc'; fetchRecords()" style="background: 0; border: 0; cursor: pointer; color: var(--fg-3); padding: 2px; display: flex; border-radius: 50%; line-height: 0">
+            <NIcon name="x" :size="11" />
+          </button>
+        </span>
+        <button v-if="activeFilters.length" @click="clearFilters" style="background: 0; border: 0; cursor: pointer; color: var(--fg-3); font-size: 12px; font-family: inherit; text-decoration: underline; text-underline-offset: 2px">Очистить</button>
       </div>
 
       <!-- Table -->
@@ -321,7 +494,7 @@ const hasNext = computed(() => (page.value + 1) * LIMIT < recordsStore.total)
               >
                 <span :style="{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: sortBy === f.slug ? 'var(--purple-700)' : undefined }">
                   {{ f.name }}
-                  <span style="width: 9px; font-size: 9px; line-height: 1" :style="{ color: sortBy === f.slug ? 'var(--purple-500)' : 'var(--neutral-300)' }">
+                  <span style="width: 9px; font-size: 9px; line-height: 1" :style="{ color: sortBy === f.slug ? 'var(--purple-500)' : 'var(--neutral-400)' }">
                     {{ sortBy === f.slug ? (sortDir === 'asc' ? '▲' : '▼') : '↕' }}
                   </span>
                 </span>
@@ -330,7 +503,7 @@ const hasNext = computed(() => (page.value + 1) * LIMIT < recordsStore.total)
             </tr>
           </thead>
           <tbody>
-            <tr v-for="rec in recordsStore.records" :key="rec.id"
+            <tr v-for="rec in filteredRecords" :key="rec.id"
               :style="{ background: sel.has(rec.id) ? 'var(--brand-tint)' : undefined }">
               <td style="padding: 8px 12px">
                 <input type="checkbox" :checked="sel.has(rec.id)" @change="toggleSel(rec.id, $event)" style="accent-color: var(--brand-primary)" />
@@ -387,16 +560,16 @@ const hasNext = computed(() => (page.value + 1) * LIMIT < recordsStore.total)
           </tbody>
         </table>
 
-        <div v-if="tableSlug && !recordsStore.loading && !recordsStore.records.length"
+        <div v-if="tableSlug && !recordsStore.loading && !filteredRecords.length"
           style="padding: 48px 20px; text-align: center">
           <div style="width: 40px; height: 40px; border-radius: 10px; background: var(--bg-2); display: grid; place-items: center; margin: 0 auto 12px; color: var(--fg-3)">
             <NIcon name="search" :size="18" />
           </div>
           <div style="font-size: 14px; font-weight: 600; margin-bottom: 4px">Нет записей</div>
           <div style="font-size: 13px; color: var(--fg-3); margin-bottom: 14px">
-            {{ search ? 'Ничего не найдено. Попробуй изменить запрос.' : 'Добавь первую запись.' }}
+            {{ search || activeFilters.length ? 'Ничего не найдено. Попробуй изменить запрос или сбросить фильтры.' : 'Добавь первую запись.' }}
           </div>
-          <NButton v-if="search" variant="secondary" size="sm" @click="search = ''">Сбросить поиск</NButton>
+          <NButton v-if="search || activeFilters.length" variant="secondary" size="sm" @click="search = ''; clearFilters()">Сбросить фильтры</NButton>
         </div>
       </div>
 

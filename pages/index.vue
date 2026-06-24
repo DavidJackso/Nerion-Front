@@ -69,7 +69,6 @@ onUnmounted(() => {
           <a href="#how">Как работает</a>
           <a href="#features">Возможности</a>
           <a href="#api">API</a>
-          <a href="#pricing">Тарифы</a>
         </nav>
         <div class="nav-actions">
           <button class="btn btn-ghost" @click="go('login')">Войти</button>
@@ -159,19 +158,13 @@ onUnmounted(() => {
           <div class="mock-float">
             <div class="fhd"><span class="m">GET</span><span class="u">/api/math-dept/teachers</span></div>
             <pre><span class="tok-p">{</span>
-            <span class="tok-k">"count"</span><span class="tok-p">:</span> <span class="tok-n">14</span><span class="tok-p">,</span>
-            <span class="tok-k">"data"</span><span class="tok-p">:</span> <span class="tok-p">[{</span>
-              <span class="tok-k">"id"</span><span class="tok-p">:</span> <span class="tok-s">"rec_a8f2b4"</span><span class="tok-p">,</span>
-              <span class="tok-k">"fio"</span><span class="tok-p">:</span> <span class="tok-s">"Иванова А. П."</span><span class="tok-p">,</span>
-              <span class="tok-k">"stavka"</span><span class="tok-p">:</span> <span class="tok-n">1.0</span>
-            <span class="tok-p">}]</span>
-          <span class="tok-p">}</span></pre>
-          </div>
-          <!-- floating badge -->
-          <div class="float-badge">
-            <span class="fi">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            </span>
+  <span class="tok-k">"count"</span><span class="tok-p">:</span> <span class="tok-n">14</span><span class="tok-p">,</span>
+  <span class="tok-k">"data"</span><span class="tok-p">:</span> <span class="tok-p">[{</span>
+    <span class="tok-k">"id"</span><span class="tok-p">:</span> <span class="tok-s">"rec_a8f2b4"</span><span class="tok-p">,</span>
+    <span class="tok-k">"fio"</span><span class="tok-p">:</span> <span class="tok-s">"Иванова А. П."</span><span class="tok-p">,</span>
+    <span class="tok-k">"stavka"</span><span class="tok-p">:</span> <span class="tok-n">1.0</span>
+  <span class="tok-p">}]</span>
+<span class="tok-p">}</span></pre>
           </div>
         </div>
       </div>
@@ -193,7 +186,6 @@ onUnmounted(() => {
             </div>
             <h3>Опиши таблицы</h3>
             <p>Выбери шаблон или собери поля сам: текст, число, дата, файл, связь. Бизнес-язык вместо SQL — «Курс», «Преподаватель», а не таблицы и джойны.</p>
-            <svg class="step-arrow" width="40" height="24" viewBox="0 0 40 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="12" x2="34" y2="12" stroke-dasharray="3 4"/><polyline points="28 6 36 12 28 18"/></svg>
           </div>
           <div class="step reveal">
             <span class="n">02</span>
@@ -202,7 +194,6 @@ onUnmounted(() => {
             </div>
             <h3>Заполни данные</h3>
             <p>Добавляй записи в удобной таблице, прикрепляй файлы и связывай сущности между собой. Платформа сама строит схему и миграции под капотом.</p>
-            <svg class="step-arrow" width="40" height="24" viewBox="0 0 40 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="12" x2="34" y2="12" stroke-dasharray="3 4"/><polyline points="28 6 36 12 28 18"/></svg>
           </div>
           <div class="step reveal">
             <span class="n">03</span>
@@ -286,7 +277,7 @@ onUnmounted(() => {
           <p style="font-size:17px;color:var(--fg-2);margin-top:16px;margin-bottom:8px">Не нужно поднимать сервер, писать роуты и описывать модели. Описал поля — эндпоинты уже работают.</p>
           <ul class="api-list">
             <li>
-              <span class="ai"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+              <span class="ai"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg></span>
               <div><h4>CRUD из коробки</h4><p>Список, чтение, создание, обновление и удаление — для каждой таблицы автоматически.</p></div>
             </li>
             <li>
@@ -306,7 +297,7 @@ onUnmounted(() => {
             <button class="ctab" :class="{ active: codeTab === 'py' }" @click="codeTab = 'py'">Python</button>
             <span class="ttl">nerionapp.ru</span>
           </div>
-          <pre>{{ SAMPLES[codeTab] }}</pre>
+          <pre v-text="SAMPLES[codeTab]?.trim()"></pre>
         </div>
       </div>
     </section>
@@ -363,7 +354,7 @@ onUnmounted(() => {
     </section>
 
     <!-- ══ PRICING ══ -->
-    <section class="band" id="pricing">
+    <section class="band" id="pricing" v-if="false">
       <div class="wrap">
         <div class="sec-head center reveal">
           <span class="section-tag">Тарифы</span>
@@ -425,7 +416,6 @@ onUnmounted(() => {
             <a href="#how">Как работает</a>
             <a href="#features">Возможности</a>
             <a href="#api">API и Swagger</a>
-            <a href="#pricing">Тарифы</a>
           </div>
           <div>
             <h5>Ресурсы</h5>
@@ -583,7 +573,7 @@ onUnmounted(() => {
 .code-tabs .ttl { margin-left:auto;font-family:var(--font-mono);font-size:11px;color:#6f7596; }
 .ctab { font-family:var(--font-mono);font-size:12px;color:#9aa0c0;background:transparent;border:none;padding:5px 11px;border-radius:7px;cursor:pointer;transition:background .14s,color .14s; }
 .ctab.active { background:rgba(127,119,221,.22);color:#fff; }
-.code-card pre { margin:0;padding:20px 22px;font-family:var(--font-mono);font-size:13px;line-height:1.85;color:#d7dae8;overflow-x:auto;white-space:pre-wrap; }
+.code-card pre { margin:0;padding:20px 22px;font-family:var(--font-mono);font-size:13px;line-height:1.85;color:#d7dae8;overflow-x:auto;white-space:pre; }
 
 /* ── Screenshots ──────────────────────────────────────────── */
 .shots { display:grid;grid-template-columns:1fr 1fr;gap:26px; }

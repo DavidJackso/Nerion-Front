@@ -692,6 +692,23 @@ onUnmounted(() => {
                   <span v-else style="color:var(--fg-3)">—</span>
                 </template>
 
+                <!-- Files: multiple chips -->
+                <template v-else-if="f.type === 'files'">
+                  <span v-if="!cellValue(rec, f) || !(cellValue(rec, f) as string[]).length" style="color:var(--fg-3)">—</span>
+                  <span v-else style="display:inline-flex;gap:4px;flex-wrap:wrap">
+                    <button
+                      v-for="key in (cellValue(rec, f) as string[])"
+                      :key="key"
+                      @click.stop="openFileCell(key)"
+                      class="filecell"
+                      style="display:inline-flex;align-items:center;gap:4px;background:0;border:0;cursor:pointer;padding:2px 6px;margin:-2px 0;border-radius:6px;font-family:inherit"
+                    >
+                      <NIcon name="file" :size="13" color="var(--fg-3)" />
+                      <span style="font-size:12px;font-family:var(--font-mono);color:var(--fg-2);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ fileKeyName(key) }}</span>
+                    </button>
+                  </span>
+                </template>
+
                 <!-- Default -->
                 <template v-else>
                   <span>{{ cellValue(rec, f) }}</span>
@@ -874,6 +891,16 @@ onUnmounted(() => {
             />
           </template>
 
+          <!-- Files upload (multiple) -->
+          <template v-else-if="f.type === 'files'">
+            <NFileInput
+              :space-slug="spaceSlug"
+              :model-value="createVals[f.slug] || []"
+              :multiple="true"
+              @update:model-value="createVals[f.slug] = $event"
+            />
+          </template>
+
           <!-- Long text textarea -->
           <template v-else-if="f.type === 'longtext'">
             <textarea
@@ -963,6 +990,15 @@ onUnmounted(() => {
             <NFileInput
               :space-slug="spaceSlug"
               :model-value="editVals[f.slug] || null"
+              @update:model-value="editVals[f.slug] = $event"
+            />
+          </template>
+
+          <template v-else-if="f.type === 'files'">
+            <NFileInput
+              :space-slug="spaceSlug"
+              :model-value="editVals[f.slug] || []"
+              :multiple="true"
               @update:model-value="editVals[f.slug] = $event"
             />
           </template>

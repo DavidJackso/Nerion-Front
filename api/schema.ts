@@ -6,10 +6,10 @@ export interface FieldMeta {
   slug: string
   type: string
   required: boolean
-  options?: string[] | null
-  target_table?: string | null
-  multiple?: boolean
-  accept?: string | null
+  enum_values?: string[] | null
+  relation_table_id?: number | null
+  relation_cardinality?: string | null
+  relation_target?: string | null
 }
 
 export interface TableMeta {
@@ -34,10 +34,10 @@ export interface UpdateFieldsPayload {
   slug: string
   type: string
   required?: boolean
-  options?: string[] | null
-  target_table?: string | null
-  multiple?: boolean
-  accept?: string | null
+  unique?: boolean
+  enum_values?: string[] | null
+  relation_cardinality?: string | null
+  relation_target?: string | null
 }
 
 export const listTables = (slug: string): Promise<TableMeta[]> =>

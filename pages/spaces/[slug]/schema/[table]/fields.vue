@@ -46,6 +46,7 @@ const FIELD_TYPES: Record<string, string> = {
   phone: 'Телефон',
   url: 'URL',
   file: 'Файл',
+  files: 'Файлы (несколько)',
   relation: 'Связь',
 }
 
@@ -231,8 +232,8 @@ async function save() {
           :key="i"
           :style="{
             padding: '8px 12px',
-            background: fieldErrors[i] ? 'var(--red-50, #fef2f2)' : f.type === 'relation' ? 'var(--brand-tint)' : f.type === 'file' ? 'var(--bg-1)' : 'var(--bg-0)',
-            border: `0.5px solid ${fieldErrors[i] ? 'var(--red-400, #f87171)' : f.type === 'relation' ? 'var(--purple-200)' : f.type === 'file' ? 'var(--border-strong)' : 'var(--border-default)'}`,
+            background: fieldErrors[i] ? 'var(--red-50, #fef2f2)' : f.type === 'relation' ? 'var(--brand-tint)' : (f.type === 'file' || f.type === 'files') ? 'var(--bg-1)' : 'var(--bg-0)',
+            border: `0.5px solid ${fieldErrors[i] ? 'var(--red-400, #f87171)' : f.type === 'relation' ? 'var(--purple-200)' : (f.type === 'file' || f.type === 'files') ? 'var(--border-strong)' : 'var(--border-default)'}`,
             borderRadius: '6px',
           }"
         >

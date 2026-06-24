@@ -234,7 +234,7 @@ function cellValue(rec: any, field: any) {
 }
 
 function isNumeric(field: any) {
-  return field.type === 'number'
+  return field.type === 'number' || field.type === 'relation'
 }
 
 function isBoolean(field: any) {
@@ -927,7 +927,7 @@ onUnmounted(() => {
               :model-value="createVals[f.slug] || ''"
               @update:model-value="createVals[f.slug] = $event"
               :type="
-                f.type === 'number' ? 'number'
+                f.type === 'number' || f.type === 'relation' ? 'number'
                 : f.type === 'email' ? 'email'
                 : f.type === 'url' ? 'url'
                 : f.type === 'phone' ? 'tel'
@@ -1027,7 +1027,7 @@ onUnmounted(() => {
               :model-value="editVals[f.slug] || ''"
               @update:model-value="editVals[f.slug] = $event"
               :type="
-                f.type === 'number' ? 'number'
+                f.type === 'number' || f.type === 'relation' ? 'number'
                 : f.type === 'email' ? 'email'
                 : f.type === 'url' ? 'url'
                 : f.type === 'phone' ? 'tel'

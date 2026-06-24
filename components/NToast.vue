@@ -30,7 +30,7 @@ const tones: Record<Tone, { border: string; solid: string; icon: string }> = {
       padding: '14px 16px',
       display: 'flex',
       gap: '12px',
-      alignItems: 'flex-start',
+      alignItems: 'center',
       minWidth: '280px',
       maxWidth: '380px',
       animation: 'toastIn 200ms',

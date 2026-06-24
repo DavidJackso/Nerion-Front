@@ -234,7 +234,7 @@ function cellValue(rec: any, field: any) {
 }
 
 function isNumeric(field: any) {
-  return field.type === 'number' || field.type === 'relation'
+  return field.type === 'number'
 }
 
 function isBoolean(field: any) {
@@ -921,13 +921,25 @@ onUnmounted(() => {
             />
           </template>
 
+          <!-- Relation picker -->
+          <template v-else-if="f.type === 'relation' && f.relation_target">
+            <NRelationPicker
+              :model-value="createVals[f.slug] ?? null"
+              @update:model-value="createVals[f.slug] = $event"
+              :space-slug="spaceSlug"
+              :related-table-slug="f.relation_target"
+              :field-name="f.name"
+              :many="f.relation_cardinality === 'many'"
+            />
+          </template>
+
           <!-- All other field types -->
           <template v-else>
             <NInput
               :model-value="createVals[f.slug] || ''"
               @update:model-value="createVals[f.slug] = $event"
               :type="
-                f.type === 'number' || f.type === 'relation' ? 'number'
+                f.type === 'number' ? 'number'
                 : f.type === 'email' ? 'email'
                 : f.type === 'url' ? 'url'
                 : f.type === 'phone' ? 'tel'
@@ -1022,12 +1034,24 @@ onUnmounted(() => {
             />
           </template>
 
+          <!-- Relation picker -->
+          <template v-else-if="f.type === 'relation' && f.relation_target">
+            <NRelationPicker
+              :model-value="editVals[f.slug] ?? null"
+              @update:model-value="editVals[f.slug] = $event"
+              :space-slug="spaceSlug"
+              :related-table-slug="f.relation_target"
+              :field-name="f.name"
+              :many="f.relation_cardinality === 'many'"
+            />
+          </template>
+
           <template v-else>
             <NInput
               :model-value="editVals[f.slug] || ''"
               @update:model-value="editVals[f.slug] = $event"
               :type="
-                f.type === 'number' || f.type === 'relation' ? 'number'
+                f.type === 'number' ? 'number'
                 : f.type === 'email' ? 'email'
                 : f.type === 'url' ? 'url'
                 : f.type === 'phone' ? 'tel'

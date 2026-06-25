@@ -21,6 +21,8 @@ const space = computed(() => spacesStore.spaces.find((s: any) => s.slug === spac
 const table = computed(() => schemaStore.activeTable)
 const fields = computed(() => (table.value as any)?.fields || [])
 
+useHead({ title: computed(() => `${(table.value as any)?.name || tableSlug.value} — ${space.value?.name || spaceSlug.value} | Nerion`) })
+
 // ── Selection ────────────────────────────────────────────────────────────────
 
 const sel = ref(new Set<string | number>())
@@ -407,7 +409,7 @@ onUnmounted(() => {
             <span style="font-variant-numeric: tabular-nums">{{ recordsStore.total }} записей</span>
             <span>·</span>
             <span
-              @click="router.push(`/spaces/${spaceSlug}/api`)"
+              @click="router.push(`/spaces/${spaceSlug}/api/docs`)"
               style="color: var(--brand-primary); cursor: pointer; display: flex; align-items: center; gap: 3px"
             >
               API <NIcon name="extlink" :size="11" />

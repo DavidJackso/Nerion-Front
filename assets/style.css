@@ -34,6 +34,14 @@
   --danger-fg:var(--red-700); --danger-bg:var(--red-50); --danger-solid:var(--red-500); --danger-border:var(--red-100);
   --info-fg:var(--blue-600); --info-bg:var(--blue-50); --info-solid:var(--blue-500);
   --overlay:rgba(20,14,58,.4);
+
+  /* Signature — registry mark ink (distinct from brand/info blue, used only by NRegMark) */
+  --stamp-ink:#1D3E8C; --stamp-ink-tint:#EEF2FB;
+
+  /* Type scale */
+  --text-2xs:11px; --text-xs:12px; --text-sm:13px; --text-base:15px;
+  --text-lg:18px; --text-xl:22px; --text-2xl:28px;
+  --weight-regular:400; --weight-medium:500; --weight-semibold:600; --weight-bold:700;
 }
 
 /* ── Reset & Base ──────────────────────────────────────────── */
@@ -68,6 +76,19 @@ table.dt tbody tr:hover td { background: var(--bg-1); }
 table.dt tbody tr:last-child td { border-bottom: 0; }
 table.dt th.sortable { cursor: pointer; user-select: none; transition: color 100ms; }
 table.dt th.sortable:hover { color: var(--fg-1); }
+
+/* ── Focus ─────────────────────────────────────────────────── */
+:focus-visible { outline: none; box-shadow: var(--ring-focus); border-radius: 6px; }
+
+/* ── Reduced motion ────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 
 /* ── Keyframes ─────────────────────────────────────────────── */
 @keyframes shimmer { 0%{background-position:-200px 0} 100%{background-position:200px 0} }

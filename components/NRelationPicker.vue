@@ -42,23 +42,6 @@ function labelById(id: number) {
   return records.value.find(r => r.id === id)?.label ?? String(id)
 }
 
-function abbr(label: string) {
-  const parts = String(label).trim().split(/\s+/)
-  return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || String(label).slice(0, 2).toUpperCase()
-}
-
-const PALETTES = [
-  { bg: 'var(--brand-tint)', fg: 'var(--purple-700)' },
-  { bg: 'var(--green-50)',   fg: 'var(--green-600)'  },
-  { bg: 'var(--amber-50)',   fg: 'var(--amber-600)'  },
-  { bg: 'var(--blue-50)',    fg: 'var(--blue-600)'   },
-]
-
-function palette(label: string) {
-  let h = 0
-  for (const c of String(label)) h = (h * 31 + c.charCodeAt(0)) >>> 0
-  return PALETTES[h % PALETTES.length]
-}
 
 function toggle(id: number) {
   if (props.many) {
@@ -134,8 +117,8 @@ onMounted(fetchRelated)
     }">
       <!-- Single: avatar + name -->
       <span v-if="!many && selected.length" style="display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: var(--purple-800)">
-        <span :style="{ width: '28px', height: '28px', borderRadius: '7px', background: palette(labelById(selected[0])).bg, display: 'grid', placeItems: 'center', fontSize: '10px', fontWeight: '700', color: palette(labelById(selected[0])).fg, flexShrink: '0' }">
-          {{ abbr(labelById(selected[0])) }}
+        <span :style="{ width: '28px', height: '28px', borderRadius: '7px', background: avatarHue(labelById(selected[0])).bg, display: 'grid', placeItems: 'center', fontSize: '10px', fontWeight: '700', color: avatarHue(labelById(selected[0])).fg, flexShrink: '0' }">
+          {{ initials(labelById(selected[0])) }}
         </span>
         {{ labelById(selected[0]) }}
       </span>
@@ -180,12 +163,12 @@ onMounted(fetchRelated)
 
         <!-- Record list -->
         <div style="max-height: 224px; overflow: auto">
-          <div v-if="loading" style="padding: 16px 14px; text-align: center; font-size: 12px; color: var(--fg-3)">Загрузка…</div>
+          <div v-if="loading" style="padding: 16px 14px; text-align: center; font-size: 12px; color: var(--fg-3)"><NSpinner :size="13" label="Загрузка…" /></div>
           <div v-else-if="!filtered.length" style="padding: 16px 14px; text-align: center; font-size: 12px; color: var(--fg-3)">Ничего не найдено</div>
           <button v-else v-for="rec in filtered" :key="rec.id" @click="toggle(rec.id)"
             :style="{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', border: '0', cursor: 'pointer', background: isChecked(rec.id) ? 'var(--brand-tint)' : 'transparent', fontFamily: 'inherit', textAlign: 'left', transition: 'background 80ms' }">
-            <span :style="{ width: '28px', height: '28px', borderRadius: '7px', background: palette(rec.label).bg, display: 'grid', placeItems: 'center', fontSize: '10px', fontWeight: '700', color: palette(rec.label).fg, flexShrink: '0', letterSpacing: '-0.01em' }">
-              {{ abbr(rec.label) }}
+            <span :style="{ width: '28px', height: '28px', borderRadius: '7px', background: avatarHue(rec.label).bg, display: 'grid', placeItems: 'center', fontSize: '10px', fontWeight: '700', color: avatarHue(rec.label).fg, flexShrink: '0', letterSpacing: '-0.01em' }">
+              {{ initials(rec.label) }}
             </span>
             <div style="flex: 1; min-width: 0">
               <div :style="{ fontSize: '13px', fontWeight: isChecked(rec.id) ? '600' : '400', color: isChecked(rec.id) ? 'var(--purple-800)' : 'var(--fg-1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }">

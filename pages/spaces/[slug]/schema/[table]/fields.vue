@@ -111,6 +111,33 @@ function del(i: number) {
   fieldErrors.value.splice(i, 1)
 }
 
+const dragIndex = ref<number | null>(null)
+const dragOverIndex = ref<number | null>(null)
+
+function onDragStart(i: number) {
+  dragIndex.value = i
+}
+
+function onDragOverRow(i: number) {
+  dragOverIndex.value = i
+}
+
+function onDropRow(i: number) {
+  const from = dragIndex.value
+  dragIndex.value = null
+  dragOverIndex.value = null
+  if (from === null || from === i) return
+  const movedField = fields.value.splice(from, 1)[0]
+  fields.value.splice(i, 0, movedField)
+  const movedError = fieldErrors.value.splice(from, 1)[0]
+  fieldErrors.value.splice(i, 0, movedError)
+}
+
+function onDragEndRow() {
+  dragIndex.value = null
+  dragOverIndex.value = null
+}
+
 function onNameInput(i: number, v: string) {
   fields.value[i].name = v
   if (!fields.value[i]._slugEdited) {
@@ -219,7 +246,7 @@ async function save() {
       <p style="font-size: 13px; color: var(--fg-2)">Добавь и настрой поля. Связи ссылаются на другие таблицы.</p>
     </div>
 
-    <div v-if="loading" style="text-align: center; padding: 32px; color: var(--fg-3)">Загрузка…</div>
+    <div v-if="loading" style="text-align: center; padding: 32px; color: var(--fg-3)"><NSpinner label="Загрузка…" /></div>
 
     <template v-else>
       <div style="display: grid; grid-template-columns: 18px 1fr 140px 140px 80px 28px; gap: 10px; padding: 0 12px 8px; font-size: 10px; color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600">
@@ -230,15 +257,22 @@ async function save() {
         <div
           v-for="(f, i) in fields"
           :key="i"
+          draggable="true"
+          @dragstart="onDragStart(i)"
+          @dragover.prevent="onDragOverRow(i)"
+          @drop.prevent="onDropRow(i)"
+          @dragend="onDragEndRow"
           :style="{
             padding: '8px 12px',
             background: fieldErrors[i] ? 'var(--red-50, #fef2f2)' : f.type === 'relation' ? 'var(--brand-tint)' : (f.type === 'file' || f.type === 'files') ? 'var(--bg-1)' : 'var(--bg-0)',
-            border: `0.5px solid ${fieldErrors[i] ? 'var(--red-400, #f87171)' : f.type === 'relation' ? 'var(--purple-200)' : (f.type === 'file' || f.type === 'files') ? 'var(--border-strong)' : 'var(--border-default)'}`,
+            border: `0.5px solid ${dragOverIndex === i && dragIndex !== i ? 'var(--brand-primary)' : fieldErrors[i] ? 'var(--red-400, #f87171)' : f.type === 'relation' ? 'var(--purple-200)' : (f.type === 'file' || f.type === 'files') ? 'var(--border-strong)' : 'var(--border-default)'}`,
             borderRadius: '6px',
+            opacity: dragIndex === i ? 0.4 : 1,
+            transition: 'opacity 100ms, border-color 100ms',
           }"
         >
           <div style="display: grid; grid-template-columns: 18px 1fr 140px 140px 80px 28px; gap: 10px; align-items: center">
-            <NIcon name="drag" :size="13" color="var(--fg-3)" style="cursor: grab" />
+            <NIcon name="drag" :size="13" color="var(--fg-3)" style="cursor: grab; touch-action: none" />
             <input
               :value="f.name"
               @input="onNameInput(i, ($event.target as HTMLInputElement).value)"

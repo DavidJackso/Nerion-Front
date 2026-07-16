@@ -52,6 +52,8 @@ function onTablePick(v: string) {
   if (!newSlugInput.value) newSlugInput.value = v
 }
 
+const tableOptions = computed(() => schemaStore.tables.map((t: { slug: string; name: string }) => ({ value: t.slug, label: t.name })))
+
 async function handleCreateList() {
   createError.value = ''
   if (!newTableSlug.value) { createError.value = 'Выбери таблицу'; return }
@@ -199,7 +201,7 @@ const crumb = computed(() =>
 
       <!-- Endpoint bar -->
       <div style="display:flex;align-items:center;gap:10px;background:var(--bg-0);border:0.5px solid var(--border-strong);border-radius:8px;padding:8px 8px 8px 12px;margin-bottom:20px">
-        <span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;background:#DBEAFE;color:#1E40AF;font-family:var(--font-mono)">GET</span>
+        <span :style="{ fontSize: '9px', fontWeight: 700, padding: '2px 6px', borderRadius: '3px', background: methodColor('GET').bg, color: methodColor('GET').fg, fontFamily: 'var(--font-mono)' }">GET</span>
         <code style="flex:1;font-size:12.5px;font-family:var(--font-mono);color:var(--fg-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ listEndpoint(activeList) }}</code>
         <NButton variant="secondary" size="sm" @click="copyEndpoint(activeList)">
           <NIcon name="copy" :size="12" />Копировать
@@ -271,7 +273,7 @@ const crumb = computed(() =>
       </div>
 
       <!-- Loading -->
-      <div v-if="loading" style="text-align:center;padding:32px;color:var(--fg-3);font-size:13px">Загрузка…</div>
+      <div v-if="loading" style="text-align:center;padding:32px;color:var(--fg-3);font-size:13px"><NSpinner :size="14" label="Загрузка…" /></div>
 
       <template v-else>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -331,17 +333,20 @@ const crumb = computed(() =>
 
     <!-- ─── ALL FILES (empty state) ──────────────────────────────────── -->
     <div v-else style="padding:20px 32px 56px;max-width:1080px">
-      <div style="margin-bottom:16px">
-        <h1 style="font-size:20px;font-weight:700;margin-bottom:4px">Все файлы</h1>
-        <div style="font-size:12px;color:var(--fg-3)">Файлы, загруженные в поля записей</div>
+      <div style="margin-bottom:16px;display:flex;align-items:center;gap:10px">
+        <div>
+          <h1 style="font-size:20px;font-weight:700;margin-bottom:4px">Все файлы</h1>
+          <div style="font-size:12px;color:var(--fg-3)">Общий обзор файлов, загруженных в поля записей</div>
+        </div>
+        <NBadge tone="brand">Скоро</NBadge>
       </div>
       <div style="padding:56px 20px;text-align:center;background:var(--bg-0);border:0.5px dashed var(--border-strong);border-radius:12px">
         <div style="width:48px;height:48px;border-radius:12px;background:var(--bg-2);display:grid;place-items:center;margin:0 auto 14px;color:var(--fg-3)">
           <NIcon name="folder" :size="22" />
         </div>
-        <div style="font-size:15px;font-weight:700;margin-bottom:6px">Просмотр файлов</div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:6px">Единый список файлов ещё готовится</div>
         <div style="font-size:13px;color:var(--fg-2);max-width:360px;margin:0 auto">
-          Файлы из полей типа «Файл» отображаются здесь. Загрузка файлов — через поля в таблицах или API генератора PDF.
+          Пока файлы можно смотреть по одному — открой запись с полем «Файл» в нужной таблице. Сводный обзор по всему пространству появится здесь позже.
         </div>
       </div>
     </div>
@@ -362,7 +367,7 @@ const crumb = computed(() =>
           :model-value="newTableSlug"
           @update:model-value="onTablePick($event as string)"
           placeholder="— выбери таблицу —"
-          :options="schemaStore.tables.map((t: { slug: string; name: string }) => ({ value: t.slug, label: t.name }))"
+          :options="tableOptions"
         />
       </div>
       <div>

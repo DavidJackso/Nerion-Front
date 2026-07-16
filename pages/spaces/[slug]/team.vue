@@ -59,17 +59,6 @@ function isMe(m: SpaceMember): boolean {
   return m.user_id === authStore.user?.id
 }
 
-function getInitials(name: string): string {
-  return String(name || '').split(' ').map((p: string) => p[0]).join('').slice(0, 2).toUpperCase()
-}
-
-const PALETTE = [
-  { bg: 'var(--purple-200)', fg: 'var(--purple-700)' },
-  { bg: '#DBEAFE', fg: '#1E40AF' },
-  { bg: '#FFE4E6', fg: '#9F1239' },
-  { bg: '#D1FAE5', fg: 'var(--green-700)' },
-]
-function palette(i: number) { return PALETTE[i % PALETTE.length] }
 
 const breadcrumb = computed(() => [space.value?.name || slug.value, 'Настройки', 'Команда'])
 </script>
@@ -101,10 +90,10 @@ const breadcrumb = computed(() => [space.value?.name || slug.value, 'Настр�
       >
         <div :style="{
           width: '32px', height: '32px', borderRadius: '50%',
-          background: palette(i).bg, color: palette(i).fg,
+          background: avatarHue(m.name).bg, color: avatarHue(m.name).fg,
           display: 'grid', placeItems: 'center',
           fontWeight: '700', fontSize: '12px', flexShrink: '0',
-        }">{{ getInitials(m.name) }}</div>
+        }">{{ initials(m.name) }}</div>
         <div style="flex: 1; min-width: 0">
           <div style="font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 6px">
             {{ m.name }}

@@ -80,13 +80,9 @@ const uploadError = ref('')
 const libCat = ref('all')
 const libSearch = ref('')
 
-const LIB_CATS = [
-  { id: 'all', label: 'Все', count: 47 },
-  { id: 'hr', label: 'Кадры', count: 18 },
-  { id: 'finance', label: 'Финансы', count: 12 },
-  { id: 'edu', label: 'Образование', count: 9 },
-  { id: 'legal', label: 'Юридические', count: 8 },
-]
+const LIB_CAT_LABELS: Record<string, string> = {
+  all: 'Все', hr: 'Кадры', finance: 'Финансы', edu: 'Образование', legal: 'Юридические',
+}
 
 const LIB_TPLS = [
   { name: 'Справка с места работы', cat: 'hr', gost: 'ГОСТ Р 7.0.97-2016', desc: 'Подтверждает трудоустройство, должность и стаж сотрудника.', official: true },
@@ -102,6 +98,13 @@ const LIB_TPLS = [
   { name: 'Командировочное удостоверение', cat: 'hr', gost: 'Унифор. форма Т-10', desc: 'Форма Т-10 для оформления командировки.', official: true },
   { name: 'Платёжное поручение', cat: 'finance', gost: 'Положение ЦБ № 762-П', desc: 'Бланк платёжного поручения по стандарту ЦБ.', official: true },
 ]
+
+const LIB_CATS = computed(() => [
+  { id: 'all', label: LIB_CAT_LABELS.all, count: LIB_TPLS.length },
+  ...Object.keys(LIB_CAT_LABELS)
+    .filter(id => id !== 'all')
+    .map(id => ({ id, label: LIB_CAT_LABELS[id], count: LIB_TPLS.filter(t => t.cat === id).length })),
+])
 
 // Editor state
 const mapping = ref<FieldMapping[]>([
@@ -284,6 +287,13 @@ function onBindChange(i: number, val: string) {
   })
 }
 
+function addField() {
+  const n = mapping.value.length + 1
+  const ph = `ПОЛЕ_${n}`
+  mapping.value = [...mapping.value, { ph, label: `Новое поле ${n}`, pdf_field: ph, table_column: '', table: '', field: '', fmt: '—', sample: '—' }]
+  showToast('Поле добавлено')
+}
+
 function openEditor(tpl: PdfTemplate) {
   activeTpl.value = tpl
   view.value = 'editor'
@@ -429,15 +439,15 @@ async function doUploadTemplate() {
         </div>
       </div>
 
-      <div v-if="templatesLoading" style="text-align: center; padding: 48px 0; color: var(--fg-3); font-size: 14px">Загрузка…</div>
+      <div v-if="templatesLoading" style="text-align: center; padding: 48px 0; color: var(--fg-3); font-size: 14px"><NSpinner label="Загрузка…" /></div>
 
       <div v-else style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px">
         <div
           v-for="t in templates"
           :key="tplId(t)"
-          style="background: var(--bg-0); border: 0.5px solid var(--border-default); border-radius: 10px; padding: 18px; display: flex; gap: 16px; transition: box-shadow 160ms"
-          @mouseenter="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-2)'"
-          @mouseleave="(e: MouseEvent) => (e.currentTarget as HTMLElement).style.boxShadow = 'none'"
+          style="background: var(--bg-0); border: 0.5px solid var(--border-default); border-radius: 10px; padding: 18px; display: flex; gap: 16px; transition: box-shadow 180ms, transform 120ms"
+          @mouseenter="(e: MouseEvent) => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = 'var(--shadow-2)'; el.style.transform = 'translateY(-2px)' }"
+          @mouseleave="(e: MouseEvent) => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = 'none'; el.style.transform = 'none' }"
         >
           <!-- Mini doc icon -->
           <div style="width: 56px; height: 72px; background: linear-gradient(180deg,#fff 0%,var(--neutral-100) 100%); border: 0.5px solid var(--border-default); border-radius: 3px; position: relative; flex-shrink: 0">
@@ -492,8 +502,11 @@ async function doUploadTemplate() {
       >
         <NIcon name="arrow" :size="12" style="transform: rotate(180deg)" />К моим шаблонам
       </button>
-      <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.01em">Библиотека шаблонов</h1>
-      <p style="font-size: 13px; color: var(--fg-2); margin-bottom: 22px; max-width: 560px; line-height: 1.5">47 шаблонов под российские нормативы. Зелёный значок — официальный документ, принимаемый регуляторами.</p>
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px">
+        <h1 style="font-size: 24px; font-weight: 700; letter-spacing: -0.01em">Библиотека шаблонов</h1>
+        <NBadge tone="brand">Скоро</NBadge>
+      </div>
+      <p style="font-size: 13px; color: var(--fg-2); margin-bottom: 22px; max-width: 560px; line-height: 1.5">Мы готовим готовые шаблоны под частые российские формы — вот что уже в работе. Зелёный значок отмечает официальный документ, принимаемый регуляторами. Пока можно загрузить свой PDF во вкладке «Мои шаблоны».</p>
 
       <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap">
         <div style="position: relative">
@@ -548,7 +561,7 @@ async function doUploadTemplate() {
             </div>
             <div style="font-size: 10px; color: var(--fg-3); font-family: var(--font-mono); margin-bottom: 6px">{{ t.gost }}</div>
             <div style="font-size: 12px; color: var(--fg-2); line-height: 1.4; margin-bottom: 10px; min-height: 32px">{{ t.desc }}</div>
-            <NButton variant="primary" size="sm" style="width: 100%" @click="showToast('Шаблон добавлен в мои')">Взять за основу</NButton>
+            <NButton variant="secondary" size="sm" style="width: 100%" disabled>Скоро</NButton>
           </div>
         </div>
       </div>
@@ -654,7 +667,7 @@ async function doUploadTemplate() {
               </div>
             </div>
             <button
-              @click="showToast('Поле добавлено')"
+              @click="addField"
               style="padding: 9px 12px; background: transparent; border: 0.5px dashed var(--border-strong); border-radius: 6px; color: var(--fg-2); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-family: inherit"
             >
               <NIcon name="plus" :size="11" />Добавить поле
@@ -671,10 +684,13 @@ async function doUploadTemplate() {
             <button @click="zoom = Math.min(140, zoom + 8)" style="background: 0; border: 0; cursor: pointer; color: var(--fg-2); font-size: 14px; padding: 4px">+</button>
             <div style="width: 1px; height: 16px; background: var(--border-default); margin: 0 4px"></div>
             <span style="display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--fg-3)">
-              <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--green-500)"></span>Live
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--amber-500)"></span>Пример макета
             </span>
           </div>
-          <div style="flex: 1; overflow: auto; display: grid; place-items: start center; padding: 28px">
+          <div style="padding: 8px 16px 0; font-size: 11px; color: var(--fg-3); text-align: center; flex-shrink: 0">
+            Показан образец на основе типовой справки — предпросмотр загруженного файла появится позже
+          </div>
+          <div style="flex: 1; overflow: auto; display: grid; place-items: start center; padding: 20px 28px 28px">
             <!-- Zoomable ГОСТ document preview -->
             <div :style="{
               width: `${560 * zoom / 100}px`,
@@ -820,10 +836,13 @@ async function doUploadTemplate() {
       <div style="background: var(--neutral-200); display: flex; flex-direction: column; overflow: hidden">
         <div style="height: 40px; background: var(--bg-0); border-bottom: 0.5px solid var(--border-default); display: flex; align-items: center; padding: 0 20px; gap: 12px; font-size: 12px; flex-shrink: 0">
           <span style="font-weight: 500">Предпросмотр</span>
-          <NBadge tone="success" :dot="true">свежий рендер</NBadge>
+          <NBadge tone="neutral">образец макета</NBadge>
           <div style="flex: 1"></div>
         </div>
-        <div style="flex: 1; overflow: auto; display: grid; place-items: start center; padding: 32px">
+        <div style="padding: 8px 20px 0; font-size: 11px; color: var(--fg-3); text-align: center; flex-shrink: 0">
+          Итоговый PDF будет собран из выбранных записей после генерации
+        </div>
+        <div style="flex: 1; overflow: auto; display: grid; place-items: start center; padding: 24px 32px 32px">
           <!-- Compact ГОСТ preview at 86% -->
           <div :style="{
             width: `${560 * 0.86}px`,
@@ -883,7 +902,7 @@ async function doUploadTemplate() {
         />
       </div>
 
-      <div v-if="archiveLoading" style="text-align: center; padding: 48px 0; color: var(--fg-3); font-size: 14px">Загрузка…</div>
+      <div v-if="archiveLoading" style="text-align: center; padding: 48px 0; color: var(--fg-3); font-size: 14px"><NSpinner label="Загрузка…" /></div>
 
       <div v-else style="background: var(--bg-0); border: 0.5px solid var(--border-default); border-radius: 8px; overflow: hidden">
         <div style="display: grid; grid-template-columns: 1fr 160px 160px 120px 96px; padding: 0 16px; height: 36px; align-items: center; background: var(--bg-1); border-bottom: 0.5px solid var(--border-default); font-size: 10px; color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600">

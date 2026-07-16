@@ -34,15 +34,8 @@ watch(() => schemaStore.tables, (tables) => {
   if (tables.length && !pickedKey.value) pickedKey.value = epKey(endpoints.value[0])
 })
 
-const METHOD_COLOR: Record<string, [string, string]> = {
-  GET:    ['#DBEAFE', '#1E40AF'],
-  POST:   ['#D1FAE5', '#065F46'],
-  PATCH:  ['#FEF3C7', '#92400E'],
-  DELETE: ['#FEE2E2', '#991B1B'],
-}
-
-function mc(method: string): string { return (METHOD_COLOR[method] ?? ['#eee', '#333'])[0] }
-function fc(method: string): string { return (METHOD_COLOR[method] ?? ['#eee', '#333'])[1] }
+function mc(method: string): string { return methodColor(method).bg }
+function fc(method: string): string { return methodColor(method).fg }
 
 const endpoints = computed<Endpoint[]>(() => {
   const result: Endpoint[] = []
@@ -132,7 +125,7 @@ const breadcrumb = computed(() => [space.value?.name || slug.value, 'REST API'])
       v-if="schemaStore.loading"
       style="display: flex; align-items: center; justify-content: center; height: 200px; color: var(--fg-3); font-size: 13px"
     >
-      Загрузка…
+      <NSpinner label="Загрузка…" />
     </div>
 
     <div

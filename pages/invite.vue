@@ -79,7 +79,7 @@ async function accept() {
     </div>
 
     <div v-else style="color: var(--fg-2); font-size: 14px; margin-top: 16px">
-      Загрузка…
+      <NSpinner label="Загрузка…" />
     </div>
   </div>
 </template>

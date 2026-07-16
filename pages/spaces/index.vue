@@ -2,7 +2,7 @@
 import { useSpacesStore } from '~/stores/spaces'
 import { useAuthStore } from '~/stores/auth'
 
-definePageMeta({ layout: 'default', middleware: [] })
+definePageMeta({ layout: false, middleware: [] })
 
 const spacesStore = useSpacesStore()
 const auth = useAuthStore()
@@ -69,14 +69,14 @@ function palette(i: number) { return PALETTE[i % PALETTE.length] }
         </NButton>
       </div>
 
-      <div v-if="spacesStore.loading" style="text-align: center; padding: 64px; color: var(--fg-3); font-size: 14px">Загрузка…</div>
+      <div v-if="spacesStore.loading" style="text-align: center; padding: 64px; color: var(--fg-3); font-size: 14px"><NSpinner label="Загрузка…" /></div>
 
       <div v-else-if="!spacesStore.spaces.length" style="text-align: center; padding: 64px; color: var(--fg-3)">
         <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px">Нет пространств</div>
         <div style="font-size: 13px">Создай первое пространство, чтобы начать работу.</div>
       </div>
 
-      <div v-else style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
+      <div v-else style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px">
         <div
           v-for="(s, i) in spacesStore.spaces" :key="s.id"
           @click="openSpace(s)"
@@ -91,7 +91,7 @@ function palette(i: number) { return PALETTE[i % PALETTE.length] }
             transform: hovered === s.id ? 'translateY(-2px)' : 'none',
           }"
         >
-          <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px">
+          <div style="display: flex; align-items: center; gap: 14px">
             <div :style="{
               width: '44px', height: '44px', borderRadius: '10px',
               background: palette(i).color, color: palette(i).fg,
@@ -103,17 +103,8 @@ function palette(i: number) { return PALETTE[i % PALETTE.length] }
               <div style="font-size: 15px; font-weight: 600; color: var(--fg-1); margin-bottom: 4px">{{ s.name }}</div>
               <span style="display: inline-block; padding: 2px 8px; border-radius: 4px; background: var(--bg-2); font-family: var(--font-mono); font-size: 12px; color: var(--fg-1)">{{ s.slug }}</span>
             </div>
+            <NRegMark :value="s.table_count" label="таблиц" />
             <NIcon name="chev" :size="14" color="var(--fg-3)" :style="{ opacity: hovered === s.id ? 1 : 0, transition: 'opacity 120ms' }" />
-          </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-top: 14px; border-top: 0.5px solid var(--border-default)">
-            <div>
-              <div style="font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums">{{ s.table_count }}</div>
-              <div style="font-size: 11px; color: var(--fg-3)">таблиц</div>
-            </div>
-            <div>
-              <div style="font-size: 13px; font-weight: 500; color: var(--fg-2)">ID {{ s.id }}</div>
-              <div style="font-size: 11px; color: var(--fg-3)">пространство</div>
-            </div>
           </div>
         </div>
       </div>

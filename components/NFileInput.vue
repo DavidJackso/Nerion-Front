@@ -17,6 +17,8 @@ const uploadingCount = ref(0)
 const error = ref('')
 const uploadedSize = ref(0)
 const sizeMap = ref<Record<string, number>>({})
+const dragging = ref(false)
+let dragDepth = 0
 
 function filename(key: string | null): string {
   if (!key) return ''
@@ -41,7 +43,29 @@ function pluralFiles(n: number): string {
 
 async function onFileChange(e: Event) {
   const input = e.target as HTMLInputElement
-  const files = Array.from(input.files ?? [])
+  await processFiles(Array.from(input.files ?? []))
+  if (fileInput.value) fileInput.value.value = ''
+}
+
+function onDragEnter(e: DragEvent) {
+  if (!e.dataTransfer?.types.includes('Files')) return
+  dragDepth++
+  dragging.value = true
+}
+
+function onDragLeave() {
+  dragDepth = Math.max(0, dragDepth - 1)
+  if (dragDepth === 0) dragging.value = false
+}
+
+async function onDrop(e: DragEvent) {
+  dragDepth = 0
+  dragging.value = false
+  if ((props.multiple ? uploadingCount.value : uploading.value)) return
+  await processFiles(Array.from(e.dataTransfer?.files ?? []))
+}
+
+async function processFiles(files: File[]) {
   if (!files.length) return
   error.value = ''
 
@@ -73,8 +97,6 @@ async function onFileChange(e: Event) {
       uploading.value = false
     }
   }
-
-  if (fileInput.value) fileInput.value.value = ''
 }
 
 function remove() {
@@ -125,19 +147,24 @@ function removeOne(key: string) {
 
       <div
         @click="!uploadingCount && fileInput?.click()"
+        @dragenter.prevent="onDragEnter"
+        @dragleave.prevent="onDragLeave"
+        @dragover.prevent
+        @drop.prevent="onDrop"
         :style="{
-          border: `1px dashed ${error ? 'var(--red-400,#f87171)' : 'var(--border-strong)'}`,
+          border: `1px dashed ${error ? 'var(--red-400,#f87171)' : dragging ? 'var(--brand-primary)' : 'var(--border-strong)'}`,
           borderRadius: '8px',
           padding: '12px 14px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           gap: '8px',
-          background: 'var(--bg-1)',
+          background: dragging ? 'var(--brand-tint)' : 'var(--bg-1)',
           cursor: uploadingCount ? 'default' : 'pointer',
           fontSize: '13px',
           color: 'var(--fg-2)',
           marginTop: multipleValues.length ? '4px' : '0',
+          transition: 'background 100ms, border-color 100ms',
         }"
       >
         <span
@@ -177,18 +204,23 @@ function removeOne(key: string) {
       <div
         v-else
         @click="!uploading && fileInput?.click()"
+        @dragenter.prevent="onDragEnter"
+        @dragleave.prevent="onDragLeave"
+        @dragover.prevent
+        @drop.prevent="onDrop"
         :style="{
-          border: `1px dashed ${error ? 'var(--red-400,#f87171)' : 'var(--border-strong)'}`,
+          border: `1px dashed ${error ? 'var(--red-400,#f87171)' : dragging ? 'var(--brand-primary)' : 'var(--border-strong)'}`,
           borderRadius: '8px',
           padding: '12px 14px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           gap: '8px',
-          background: 'var(--bg-1)',
+          background: dragging ? 'var(--brand-tint)' : 'var(--bg-1)',
           cursor: uploading ? 'default' : 'pointer',
           fontSize: '13px',
           color: 'var(--fg-2)',
+          transition: 'background 100ms, border-color 100ms',
         }"
       >
         <span

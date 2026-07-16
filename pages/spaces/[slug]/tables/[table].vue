@@ -243,14 +243,6 @@ function isBoolean(field: any) {
   return field.type === 'boolean'
 }
 
-const MONO_HUES = [
-  'var(--purple-400)',
-  'var(--green-500)',
-  'var(--amber-500)',
-  'var(--blue-500)',
-  'var(--purple-600)',
-]
-
 function fileKeyName(key: string): string {
   const last = key.split('/').pop() ?? key
   return last.replace(/^\d+_/, '')
@@ -266,12 +258,7 @@ async function openFileCell(key: string) {
 }
 
 function monogram(name: any) {
-  const s = String(name || '')
-  const parts = s.trim().split(/\s+/)
-  const initials = (parts[0]?.[0] || '') + (parts[1]?.[0] || '')
-  let h = 0
-  for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) >>> 0
-  return { initials: initials.toUpperCase(), color: MONO_HUES[h % MONO_HUES.length] }
+  return { initials: initials(name), color: avatarHue(name).solid }
 }
 
 // ── Breadcrumb ────────────────────────────────────────────────────────────────
@@ -400,14 +387,15 @@ onUnmounted(() => {
         style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; gap: 12px"
       >
         <div>
-          <h1 style="font-size: 20px; font-weight: 700; line-height: 1.2; margin-bottom: 4px">
-            {{ (table as any)?.name || '…' }}
-          </h1>
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px">
+            <h1 style="font-size: 20px; font-weight: 700; line-height: 1.2">
+              {{ (table as any)?.name || '…' }}
+            </h1>
+            <NRegMark :value="recordsStore.total" label="записей" />
+          </div>
           <div
             style="font-size: 12px; color: var(--fg-3); display: flex; align-items: center; gap: 8px"
           >
-            <span style="font-variant-numeric: tabular-nums">{{ recordsStore.total }} записей</span>
-            <span>·</span>
             <span
               @click="router.push(`/spaces/${spaceSlug}/api/docs`)"
               style="color: var(--brand-primary); cursor: pointer; display: flex; align-items: center; gap: 3px"
@@ -484,7 +472,11 @@ onUnmounted(() => {
             }">{{ activeFilters.length }}</span>
           </button>
 
-          <div v-if="showFilter" style="position: absolute; top: calc(100% + 6px); left: 0; z-index: 41; width: 380px; background: var(--bg-0); border: 0.5px solid var(--border-default); border-radius: 10px; box-shadow: 0 12px 32px rgba(20,14,58,.12),0 2px 6px rgba(20,14,58,.06)">
+          <div
+            v-if="showFilter"
+            @keydown.escape="showFilter = false"
+            style="position: absolute; top: calc(100% + 6px); left: 0; z-index: 41; width: 380px; background: var(--bg-0); border: 0.5px solid var(--border-default); border-radius: 10px; box-shadow: 0 12px 32px rgba(20,14,58,.12),0 2px 6px rgba(20,14,58,.06)"
+          >
             <div style="padding: 12px 14px; border-bottom: 0.5px solid var(--border-default); font-size: 12px; font-weight: 600; color: var(--fg-1)">Фильтры</div>
             <div style="padding: 14px; display: flex; flex-direction: column; gap: 10px; max-height: 280px; overflow: auto">
               <div v-if="!filters.length" style="font-size: 12px; color: var(--fg-3); text-align: center; padding: 8px 0">Условий пока нет</div>
@@ -574,9 +566,24 @@ onUnmounted(() => {
         <!-- Loading -->
         <div
           v-if="recordsStore.loading && !recordsStore.records.length"
-          style="padding: 64px; text-align: center; color: var(--fg-3); font-size: 14px"
+          style="padding: 16px 20px; display: flex; flex-direction: column; gap: 14px"
         >
-          Загрузка…
+          <div v-for="row in 6" :key="row" style="display: flex; align-items: center; gap: 16px">
+            <div style="width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(90deg, var(--bg-2) 25%, var(--bg-1) 37%, var(--bg-2) 63%); background-size: 400px 100%; animation: shimmer 1.3s ease-in-out infinite; flex-shrink: 0" />
+            <div
+              v-for="col in 4"
+              :key="col"
+              :style="{
+                height: '11px',
+                borderRadius: '4px',
+                flex: col === 1 ? '2' : '1',
+                background: 'linear-gradient(90deg, var(--bg-2) 25%, var(--bg-1) 37%, var(--bg-2) 63%)',
+                backgroundSize: '400px 100%',
+                animation: 'shimmer 1.3s ease-in-out infinite',
+                animationDelay: `${row * 40}ms`,
+              }"
+            />
+          </div>
         </div>
 
         <!-- Data table -->
@@ -595,7 +602,12 @@ onUnmounted(() => {
                 v-for="f in fields"
                 :key="f.slug"
                 @click="toggleSort(f.slug)"
+                @keydown.enter="toggleSort(f.slug)"
+                @keydown.space.prevent="toggleSort(f.slug)"
                 class="sortable"
+                tabindex="0"
+                role="button"
+                :aria-sort="sortBy === f.slug ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'"
                 :style="{ textAlign: isNumeric(f) ? 'right' : 'left' }"
               >
                 <span
